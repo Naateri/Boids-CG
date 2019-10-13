@@ -8,6 +8,7 @@
 #include <GL/glut.h>
 #include "boids.h"
 #include "objective.h"
+#include "predator.h"
 
 #define KEY_ESC 27
 #define BOIDS 10
@@ -88,7 +89,8 @@ void idle(){ // AGREGAR ESTA FUNCION
 //funcion llamada a cada imagen
 void glPaint(void) {
 	
-	cout << "Objectives: " << objectives.size() << endl;
+	//cout << "Objectives: " << objectives.size() << endl;
+	all_boids = boids;
 	
 	//El fondo de la escena al color initial
 	glClear(GL_COLOR_BUFFER_BIT); //CAMBIO
@@ -110,6 +112,13 @@ void glPaint(void) {
 	for (int i = 0; i < boids.size(); i++)
 		boids.at(i)->move();
 	
+	//predator
+	for (int i = 0; i < predators.size(); i++){
+		predators[i]->move();
+		predators[i]->draw();
+	}
+	
+	boids = all_boids;
 	
 	//dibuja el gizmo
 	displayGizmo();
@@ -150,6 +159,14 @@ GLvoid window_key(unsigned char key, int x, int y) {
 	case KEY_ESC:
 		exit(0);
 		break;
+	case '1':{
+		Predator* p;
+		Point2D* pt = new Point2D(-300.0f, 300.0f);
+		p = new Predator;
+		p->set_pt(pt);
+		predators.push_back(p);
+		break;
+	}
 	default:
 		break;
 	}

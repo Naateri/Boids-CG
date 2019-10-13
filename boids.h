@@ -10,6 +10,9 @@
 #include <time.h>
 #include <GL/glut.h>
 #include "objective.h"
+#include "predator.h"
+
+class Predator;
 
 struct RandNumbers{
 	int rdtsc(){
@@ -18,14 +21,13 @@ struct RandNumbers{
 	
 };
 
-
 class Boid{
 private:
 	
 	float boid_speed = 0.5f;
 	
 	float view_angle = 135.0f;
-	float view_distance = 30.0f;
+	float view_distance = 150.0f;
 	
 	float center_x, center_y;
 	float objective_x, objective_y;
@@ -51,5 +53,6 @@ public:
 
 extern std::vector<Boid*> boids;
 extern std::vector<Objective*> objectives;
+extern std::vector<Predator*> predators;
 
 #endif

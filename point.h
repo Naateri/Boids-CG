@@ -11,6 +11,9 @@ struct Point2D{
 		this-> x = x;
 		this->y = y;
 	}
+	float distance(Point2D* b){
+		return sqrt(pow(this->x - b->x, 2) + pow(this->y - b->y, 2));
+	}
 };
 
 #endif

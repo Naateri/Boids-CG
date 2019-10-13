@@ -14,6 +14,7 @@ RandNumbers temp;
 
 std::vector<Boid*> boids;
 std::vector<Objective*> objectives = {};
+std::vector<Predator*> predators = {};
 
 void Boid::move_up(){
 	if (pt->y >= 300) pt->y -= boid_speed;
@@ -41,7 +42,7 @@ void Boid::move_towards_center(){
 	for(int i = 0; i < boids.size(); i++){
 		if (boids[i]->get_pt()->x == pt->x 
 			&& boids[i]->get_pt()->y == pt->y) continue;
-		if (distance(boids[i]->get_pt(), this->pt) <= this->view_distance){
+		if (boids[i]->get_pt()->distance(this->pt) <= this->view_distance){
 			center_x += (boids[i]->get_pt()->x - this->pt->x);
 			center_y += (boids[i]->get_pt()->y - this->pt->y);
 		}
@@ -57,12 +58,12 @@ void Boid::avoid_boids(){
 	for(int i = 0; i < boids.size(); i++){
 		if (boids[i]->get_pt()->x == pt->x 
 			&& boids[i]->get_pt()->y == pt->y) continue;
-		float dist = distance(boids[i]->get_pt(), this->pt);
+		float dist = boids[i]->get_pt()->distance(this->pt);
 		if (dist <= 10.0f){
-			distance_x += (this->pt->x - boids[i]->get_pt()->x);
-			distance_y += (this->pt->y - boids[i]->get_pt()->y);
-			distance_x -= 10.0f;
-			//random_move();
+			//distance_x -= (this->pt->x - boids[i]->get_pt()->x);
+			//distance_y -= (this->pt->y - boids[i]->get_pt()->y);
+			random_move();
+			random_move();
 		}
 	}
 }
@@ -70,21 +71,15 @@ void Boid::avoid_boids(){
 void Boid::move_towards_objective(){
 	objective_x = 0; objective_y = 0;
 	if (objectives.empty()) return;
-	Objective* obj = objectives[0];
-	/*if (pt->x <= obj->pt->x){
-		objective_x += boid_speed;
-	} else {
-		objective_x -= boid_speed;
-	}
+	//Objective* obj = objectives[0];
+	Objective* obj;
 	
-	if (pt->y <= obj->pt->y){
-		objective_y += boid_speed;
-	} else {
-		objective_y -= boid_speed;
-	}*/
-	if (distance(obj->pt, this->pt) <= this->view_distance){
-		objective_x += (obj->pt->x - this->pt->x);
-		objective_y += (obj->pt->y - this->pt->y);
+	for (int i = 0; i < objectives.size(); i++){
+		obj = objectives[i];
+		if (obj->pt->distance(this->pt) <= this->view_distance){
+			objective_x += (obj->pt->x - this->pt->x);
+			objective_y += (obj->pt->y - this->pt->y);
+		}
 	}
 }
 	
@@ -123,27 +118,16 @@ void Boid::move(){
 	random_move();
 	
 	move_towards_center();
-	/*if (pt->y <= center_y) move_up();
-	else if (pt->y >= center_y) move_down();
-	
-	if (pt->x >= center_x) move_left();
-	else if (pt->x <= center_x) move_right();*/
-	
-	//pt->x += (center_x * this->boid_speed);
-	//pt->y += (center_y * this->boid_speed);
 	
 	avoid_boids();
-	
-	//pt->x += distance_x;
-	//pt->y += distance_y;
 	
 	move_towards_objective();
 	
 	float move_x, move_y;
 	move_x = 0.0f; move_y = 0.0f;
 	float normal;
-	move_x += (center_x + distance_x + 10*objective_x);
-	move_y += (center_y + distance_y + 10*objective_y);
+	move_x += (center_x + distance_x + 8*objective_x);
+	move_y += (center_y + distance_y + 8*objective_y);
 	
 	normal = sqrt(pow(move_x, 2) + pow(move_y, 2));
 	if (move_x != 0) move_x /= normal;
@@ -162,9 +146,13 @@ void Boid::move(){
 //	pt->x += objective_x;
 //	pt->y += objective_y;
 	
-	if (objectives.empty()) return;
-	if (distance(objectives[0]->pt, this->pt) >= 2.0f){
-		objectives.erase(objectives.begin() + 0);
+	if (!objectives.empty()){
+		for (int i = 0; i < objectives.size(); i++){
+			if (objectives[i]->pt->distance(this->pt) <= 5.0f){
+				objectives.erase(objectives.begin() + i);
+				i--;
+			}
+		}
 	}
 	
 	//random_move();
