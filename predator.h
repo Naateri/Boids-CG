@@ -21,6 +21,8 @@ private:
 	float view_distance = 230.0f;
 	
 	float objective_x, objective_y;
+	float move_x, move_y;
+	
 	bool moved = false;
 	int dir, max_moves = 20, cur_moves;
 	
@@ -37,6 +39,7 @@ public:
 	Point2D* get_pt() { return this->pt; };
 	void move();
 	void draw();
+	void draw_line();
 };
 
 extern std::vector<Boid*> all_boids;

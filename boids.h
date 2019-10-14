@@ -12,6 +12,9 @@
 #include "objective.h"
 #include "predator.h"
 
+#define REGULAR_SPEED 0.4f
+#define RUNNING_SPEED 0.8f
+
 class Predator;
 
 struct RandNumbers{
@@ -32,7 +35,11 @@ private:
 	float center_x, center_y;
 	float objective_x, objective_y;
 	float distance_x, distance_y;
+	float predator_x, predator_y;
+	
+	float move_x, move_y;
 	bool moved = false;
+	bool go_to_obj_only = false;
 	int dir, max_moves = 20, cur_moves;
 	
 	Point2D* pt;
@@ -44,11 +51,14 @@ private:
 	void avoid_boids();
 	void random_move();
 	void move_towards_objective();
+	void avoid_predator();
 	
 public:
 	void set_pt(Point2D* pt);
 	Point2D* get_pt();
 	void move();
+	void draw();
+	void draw_line();
 };
 
 extern std::vector<Boid*> boids;

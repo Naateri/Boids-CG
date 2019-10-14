@@ -72,7 +72,6 @@ void Predator::move(){
 	//random_move();
 	move_towards_boids();
 	
-	float move_x, move_y;
 	move_x = 0.0f; move_y = 0.0f;
 	float normal;
 	move_x += (objective_x);
@@ -109,5 +108,14 @@ void Predator::draw(){
 	glBegin(GL_POINTS);
 	glColor3d(0, 255, 0);
 	glVertex2f(pt->x, pt->y);
+	glEnd();
+}
+
+void Predator::draw_line(){
+	glLineWidth(2);
+	glBegin(GL_LINES);
+	glColor3d(0,255,0);
+	glVertex2f(pt->x, pt->y);
+	glVertex2f(pt->x + 15*move_x, pt->y + 15*move_y);
 	glEnd();
 }

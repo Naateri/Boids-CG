@@ -11,7 +11,7 @@
 #include "predator.h"
 
 #define KEY_ESC 27
-#define BOIDS 10
+#define BOIDS 50
 using namespace std;
 
 RandNumbers temp1;
@@ -96,12 +96,8 @@ void glPaint(void) {
 	glClear(GL_COLOR_BUFFER_BIT); //CAMBIO
 	glLoadIdentity();
 	glOrtho(-300.0f,  300.0f,-300.0f, 300.0f, -1.0f, 1.0f);
-	glPointSize(6);
-	glBegin(GL_POINTS);
-	glColor3d(0, 0, 255);
-	for (int i = 0; i < boids.size(); i++)
-		glVertex2f((float)boids.at(i)->get_pt()->x, (float)boids.at(i)->get_pt()->y);
-	
+	//glPointSize(6);
+	//glBegin(GL_POINTS);
 	
 	//drawing objectives
 	for (int i = 0; i < objectives.size(); i++){
@@ -109,13 +105,17 @@ void glPaint(void) {
 	}
 	
 	//moving boids
-	for (int i = 0; i < boids.size(); i++)
-		boids.at(i)->move();
+	for (int i = 0; i < boids.size(); i++){
+		boids[i]->move();
+		boids[i]->draw();
+		boids[i]->draw_line();
+	}
 	
 	//predator
 	for (int i = 0; i < predators.size(); i++){
 		predators[i]->move();
 		predators[i]->draw();
+		predators[i]->draw_line();
 	}
 	
 	boids = all_boids;

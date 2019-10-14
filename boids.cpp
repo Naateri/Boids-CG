@@ -60,9 +60,8 @@ void Boid::avoid_boids(){
 			&& boids[i]->get_pt()->y == pt->y) continue;
 		float dist = boids[i]->get_pt()->distance(this->pt);
 		if (dist <= 10.0f){
-			//distance_x -= (this->pt->x - boids[i]->get_pt()->x);
-			//distance_y -= (this->pt->y - boids[i]->get_pt()->y);
-			random_move();
+			//distance_x += (this->pt->x - boids[i]->get_pt()->x);
+			//distance_y += (this->pt->y - boids[i]->get_pt()->y);
 			random_move();
 		}
 	}
@@ -70,17 +69,45 @@ void Boid::avoid_boids(){
 
 void Boid::move_towards_objective(){
 	objective_x = 0; objective_y = 0;
+	go_to_obj_only = false;
 	if (objectives.empty()) return;
 	//Objective* obj = objectives[0];
 	Objective* obj;
 	
 	for (int i = 0; i < objectives.size(); i++){
 		obj = objectives[i];
-		if (obj->pt->distance(this->pt) <= this->view_distance){
+		float dist = obj->pt->distance(this->pt);
+		if (dist <= this->view_distance){
 			objective_x += (obj->pt->x - this->pt->x);
 			objective_y += (obj->pt->y - this->pt->y);
+			if (dist <= 20.0f){
+				go_to_obj_only = true;
+				this->boid_speed = RUNNING_SPEED;
+				objective_x = (obj->pt->x - this->pt->x);
+				objective_y = (obj->pt->y - this->pt->y);
+				break;
+			}
 		}
 	}
+}
+
+void Boid::avoid_predator(){
+	predator_x = 0; predator_y = 0;
+	if (predators.empty()) return;
+	
+	Predator* pred;
+	
+	this->boid_speed = REGULAR_SPEED;
+	
+	for(int i = 0; i < predators.size(); i++){
+		pred = predators[i];
+		if (pred->get_pt()->distance(this->pt) <= this->view_distance){
+			this->boid_speed = RUNNING_SPEED;
+			predator_x += (this->pt->x - pred->get_pt()->x);
+			predator_y += (this->pt->y - pred->get_pt()->y);
+		}
+	}
+	
 }
 	
 void Boid::random_move(){
@@ -115,7 +142,7 @@ Point2D* Boid::get_pt() { return this->pt; }
 	
 void Boid::move(){
 	
-	random_move();
+	//random_move();
 	
 	move_towards_center();
 	
@@ -123,11 +150,22 @@ void Boid::move(){
 	
 	move_towards_objective();
 	
-	float move_x, move_y;
+	avoid_predator();
+	
 	move_x = 0.0f; move_y = 0.0f;
 	float normal;
-	move_x += (center_x + distance_x + 8*objective_x);
-	move_y += (center_y + distance_y + 8*objective_y);
+	if (go_to_obj_only){
+		move_x += objective_x;
+		move_y += objective_y;
+	} else {
+		move_x += (center_x + distance_x + boids.size()*objective_x + boids.size()*predator_x);
+		move_y += (center_y + distance_y + boids.size()*objective_y + boids.size()*predator_y);
+	}
+	
+	if (move_x == 0 && move_y == 0) {
+		random_move();
+		return;
+	}
 	
 	normal = sqrt(pow(move_x, 2) + pow(move_y, 2));
 	if (move_x != 0) move_x /= normal;
@@ -156,4 +194,22 @@ void Boid::move(){
 	}
 	
 	//random_move();
+}
+
+void Boid::draw(){
+	glPointSize(6);
+	glBegin(GL_POINTS);
+	glColor3d(0, 0, 255);
+	glVertex2f(pt->x, pt->y);
+	glEnd();
+	
+}
+
+void Boid::draw_line(){
+	glLineWidth(2);
+	glBegin(GL_LINES);
+	glColor3d(0,0,255);
+	glVertex2f(pt->x, pt->y);
+	glVertex2f(pt->x + 15*move_x, pt->y + 15*move_y);
+	glEnd();
 }
