@@ -15,6 +15,7 @@ RandNumbers temp;
 std::vector<Boid*> boids;
 std::vector<Objective*> objectives = {};
 std::vector<Predator*> predators = {};
+std::vector<Rectangle*> obstacles = {};
 
 void Boid::move_up(){
 	if (pt->y >= 300) pt->y -= boid_speed;
@@ -55,21 +56,28 @@ void Boid::move_towards_center(){
 void Boid::avoid_boids(){
 	distance_x = 0;
 	distance_y = 0;
+	int count = 0;
 	for(int i = 0; i < boids.size(); i++){
 		if (boids[i]->get_pt()->x == pt->x 
 			&& boids[i]->get_pt()->y == pt->y) continue;
 		float dist = boids[i]->get_pt()->distance(this->pt);
-		if (dist <= 10.0f){
-			//distance_x += (this->pt->x - boids[i]->get_pt()->x);
-			//distance_y += (this->pt->y - boids[i]->get_pt()->y);
-			random_move();
+		if (dist <= 20.0f){
+			distance_x += (this->pt->x - boids[i]->get_pt()->x);
+			distance_y += (this->pt->y - boids[i]->get_pt()->y);
+			count++;
+			//random_move();
 		}
 	}
+	/*if (count > 0){
+		distance_x /= count;
+		distance_y /= count;
+	}*/
 }
 
 void Boid::move_towards_objective(){
 	objective_x = 0; objective_y = 0;
 	go_to_obj_only = false;
+	float min_dist = 9999.0f;
 	if (objectives.empty()) return;
 	//Objective* obj = objectives[0];
 	Objective* obj;
@@ -78,15 +86,16 @@ void Boid::move_towards_objective(){
 		obj = objectives[i];
 		float dist = obj->pt->distance(this->pt);
 		if (dist <= this->view_distance){
-			objective_x += (obj->pt->x - this->pt->x);
-			objective_y += (obj->pt->y - this->pt->y);
-			if (dist <= 20.0f){
-				go_to_obj_only = true;
-				this->boid_speed = RUNNING_SPEED;
-				objective_x = (obj->pt->x - this->pt->x);
-				objective_y = (obj->pt->y - this->pt->y);
-				break;
-			}
+			//objective_x += (obj->pt->x - this->pt->x);
+			//objective_y += (obj->pt->y - this->pt->y);
+			/*if (dist <= 20.0f){
+				go_to_obj_only = false;
+				this->boid_speed = RUNNING_SPEED;*/
+				if (dist < min_dist){
+					objective_x = (obj->pt->x - this->pt->x);
+					objective_y = (obj->pt->y - this->pt->y);
+				}
+			//}
 		}
 	}
 }
@@ -135,6 +144,34 @@ void Boid::random_move(){
 		move_right();
 	}
 }
+
+void Boid::avoid_obstacle(){
+	float min_distance = 9999.0f;
+	obstacle_x = 0.0f;
+	obstacle_y = 0.0f;
+	
+	float ahead_x = pt->x + last_move_x * 15;
+	float ahead_y = pt->y + last_move_y * 15;
+	Point2D* ahead = new Point2D(ahead_x, ahead_y);
+	Point2D* ahead2 = new Point2D(ahead_x/2.0f, ahead_y/2.0f);
+	
+	for(int i = 0; i < obstacles.size(); i++){
+		Point2D* center = obstacles[i]->get_center();
+		float dist = ahead->distance(center);
+		float dist2 = ahead2->distance(center);
+		if (dist <= obstacles[i]->radius || dist2 <= obstacles[i]->radius ){
+			//std::cout << "MIN_DIST\n";
+			if (obstacles[i]->distance(pt) < min_distance){
+				obstacle_x = (ahead->x - center->x);
+				obstacle_y = (ahead->y - center->y);
+				min_distance = obstacles[i]->distance(pt);
+			}
+		}
+	}
+	
+	obstacle_x *= 5.0f;
+	obstacle_y *= 5.0f;
+}
 	
 void Boid::set_pt(Point2D* pt) { this->pt = pt; }
 	
@@ -152,14 +189,18 @@ void Boid::move(){
 	
 	avoid_predator();
 	
+	avoid_obstacle();
+	
 	move_x = 0.0f; move_y = 0.0f;
 	float normal;
 	if (go_to_obj_only){
-		move_x += objective_x;
-		move_y += objective_y;
+		move_x = objective_x;
+		move_y = objective_y;
 	} else {
-		move_x += (center_x + distance_x + boids.size()*objective_x + boids.size()*predator_x);
-		move_y += (center_y + distance_y + boids.size()*objective_y + boids.size()*predator_y);
+		move_x = (center_x + distance_x + boids.size()*objective_x + boids.size()*predator_x
+				   + obstacle_x);
+		move_y = (center_y + distance_y + boids.size()*objective_y + boids.size()*predator_y
+				   + obstacle_y);
 	}
 	
 	if (move_x == 0 && move_y == 0) {
@@ -175,6 +216,9 @@ void Boid::move(){
 	
 	pt->x += (move_x * boid_speed);
 	pt->y += (move_y * boid_speed);
+	
+	last_move_x = move_x;
+	last_move_y = move_y;
 	
 	if (pt->y >= 300) pt->y--;
 	else if (pt->y <= -300) pt->y++;
@@ -210,6 +254,7 @@ void Boid::draw_line(){
 	glBegin(GL_LINES);
 	glColor3d(0,0,255);
 	glVertex2f(pt->x, pt->y);
+	//glVertex2f(pt->x + this->view_distance*move_x, pt->y + this->view_distance*move_y);
 	glVertex2f(pt->x + 15*move_x, pt->y + 15*move_y);
 	glEnd();
 }

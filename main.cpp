@@ -9,9 +9,10 @@
 #include "boids.h"
 #include "objective.h"
 #include "predator.h"
+#include "rectangle.h"
 
 #define KEY_ESC 27
-#define BOIDS 50
+#define BOIDS 20
 using namespace std;
 
 RandNumbers temp1;
@@ -22,6 +23,9 @@ float distance(Point2D* a, Point2D* b){
 
 //vector<Objective*> objectives;
 //std::vector<Boid*> boids;
+
+int click = 0;
+bool draw_rectangle = false;
 
 //dibuja un simple gizmo
 void displayGizmo(){
@@ -50,19 +54,36 @@ void generate_points(int num_points){
 	}
 }
 
+vector<Point2D*> all_points;
+
 void OnMouseClick(int button, int state, int x, int y){
-	Point2D* pt;
+	Point2D* pt, *prev_pt;
 	//Boid* boid;
 	Objective* obj;
 	Boid* boid;
+	Rectangle* rect;
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-		//convertir x,y
-		pt = new Point2D(x - 300, 300 - y);
-		cout << x << ' ' << y << endl;
-		obj = new Objective;
-		obj->pt = pt;
-		objectives.push_back(obj);
-		
+		if (draw_rectangle){
+			pt = new Point2D(x-300, 300-y);
+			click++;
+			if (click == 2) {
+				click = 0;
+				pt = new Point2D(x - 300, 300 - y);
+				cout << x << ' ' << y << endl;
+				rect = new Rectangle(all_points[all_points.size() - 1], pt);
+				rect->print();
+				obstacles.push_back(rect);
+				cout << "Obstacle inserted\n";
+				pt = 0; prev_pt = 0;
+			}
+			all_points.push_back(pt);
+		} else {
+			pt = new Point2D(x - 300, 300 - y);
+			cout << x << ' ' << y << endl;
+			obj = new Objective;
+			obj->pt = pt;
+			objectives.push_back(obj);
+		}
 	}else if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
 		r = true;
 		pt = new Point2D(x-300, 300-y);
@@ -118,6 +139,11 @@ void glPaint(void) {
 		predators[i]->draw_line();
 	}
 	
+	//obstacles
+	for (int i = 0; i < obstacles.size(); i++){
+		obstacles[i]->draw();
+	}
+	
 	boids = all_boids;
 	
 	//dibuja el gizmo
@@ -167,6 +193,12 @@ GLvoid window_key(unsigned char key, int x, int y) {
 		predators.push_back(p);
 		break;
 	}
+	case '2':
+		draw_rectangle = !draw_rectangle;
+		click = 0;
+		if (draw_rectangle) cout << "Clicking now draws rectangles.\n";
+		else cout << "Clicking now draws objectives.\n";
+		break;
 	default:
 		break;
 	}
