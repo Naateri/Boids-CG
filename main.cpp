@@ -12,7 +12,11 @@
 #include "rectangle.h"
 
 #define KEY_ESC 27
-#define BOIDS 20
+#define BOIDS 250
+
+#define SIZE 400
+#define SIZE_F 400.0f
+
 using namespace std;
 
 RandNumbers temp1;
@@ -23,6 +27,17 @@ float distance(Point2D* a, Point2D* b){
 
 //vector<Objective*> objectives;
 //std::vector<Boid*> boids;
+
+vector<Boid*>** GRID;
+int size;
+
+void clear_grid(){
+	for (int i = 0; i < size; i++){
+		for (int j = 0; j < size; j++){
+			GRID[i][j].clear();
+		}
+	}
+}
 
 int click = 0;
 bool draw_rectangle = false;
@@ -44,13 +59,33 @@ void generate_points(int num_points){
 	Boid* boid;
 	int x, y;
 	for(int i = 0; i < num_points; i++){
-		x = rand()%600;
-		y = rand()%600;
-		pt = new Point2D(x - 300, 300 - y);
+		x = rand()%(SIZE << 1);
+		y = rand()%(SIZE << 1);
+		pt = new Point2D(x - SIZE, SIZE - y);
 		boid = new Boid;
 		//points.push_back(pt);
 		boid->set_pt(pt);
 		boids.push_back(boid);
+	}
+	
+	float view_distance = boid->get_dist();
+	cout << view_distance << endl;
+	size = (SIZE << 1)/view_distance + 1;
+	
+	//create matrix
+	
+	GRID = new vector<Boid*>*[size];
+	for (int i = 0; i < size; i++){
+		GRID[i] = new vector<Boid*>[size];
+	}
+	
+	vector<Boid*> temp;
+	temp.clear();
+	
+	for (int i = 0; i < size; i++){
+		for (int j = 0; j < size; j++){
+			GRID[i][j] = temp;
+		}
 	}
 }
 
@@ -64,11 +99,11 @@ void OnMouseClick(int button, int state, int x, int y){
 	Rectangle* rect;
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
 		if (draw_rectangle){
-			pt = new Point2D(x-300, 300-y);
+			pt = new Point2D(x-SIZE, SIZE-y);
 			click++;
 			if (click == 2) {
 				click = 0;
-				pt = new Point2D(x - 300, 300 - y);
+				pt = new Point2D(x - SIZE, SIZE - y);
 				cout << x << ' ' << y << endl;
 				rect = new Rectangle(all_points[all_points.size() - 1], pt);
 				rect->print();
@@ -78,7 +113,7 @@ void OnMouseClick(int button, int state, int x, int y){
 			}
 			all_points.push_back(pt);
 		} else {
-			pt = new Point2D(x - 300, 300 - y);
+			pt = new Point2D(x - SIZE, SIZE - y);
 			cout << x << ' ' << y << endl;
 			obj = new Objective;
 			obj->pt = pt;
@@ -86,7 +121,7 @@ void OnMouseClick(int button, int state, int x, int y){
 		}
 	}else if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
 		r = true;
-		pt = new Point2D(x-300, 300-y);
+		pt = new Point2D(x-SIZE, SIZE-y);
 		boid = new Boid;
 		boid->set_pt(pt);
 		boids.push_back(boid);
@@ -107,6 +142,25 @@ void idle(){ // AGREGAR ESTA FUNCION
 	glutPostRedisplay();
 }
 
+void draw_grid(){
+	glColor3d(0,255,0);
+	glLineWidth(2);
+	glBegin(GL_LINES);
+	float view_distance = boids[0]->get_dist();
+	for(int i = 0; i < size; i++){
+		//glBegin(GL_LINES);
+		for (int j = 0; j < size; j++){
+			glVertex2d(i * view_distance -  SIZE, j * view_distance - SIZE);
+			glVertex2d(SIZE - i * view_distance, j * view_distance - SIZE);
+			
+			glVertex2d(j * view_distance - SIZE, i * view_distance -  SIZE);
+			glVertex2d(j * view_distance - SIZE, SIZE - i * view_distance);
+		}
+		//glEnd();
+	}
+	glEnd();
+}
+
 //funcion llamada a cada imagen
 void glPaint(void) {
 	
@@ -116,18 +170,25 @@ void glPaint(void) {
 	//El fondo de la escena al color initial
 	glClear(GL_COLOR_BUFFER_BIT); //CAMBIO
 	glLoadIdentity();
-	glOrtho(-300.0f,  300.0f,-300.0f, 300.0f, -1.0f, 1.0f);
+	glOrtho(-SIZE_F,  SIZE_F,-SIZE_F, SIZE_F, -1.0f, 1.0f);
 	//glPointSize(6);
 	//glBegin(GL_POINTS);
 	
 	//drawing objectives
-	for (int i = 0; i < objectives.size(); i++){
+	/*for (int i = 0; i < objectives.size(); i++){
 		objectives[i]->draw();
-	}
+	}*/
 	
 	//moving boids
+	
+	clear_grid();
+	
 	for (int i = 0; i < boids.size(); i++){
 		boids[i]->move();
+		boids[i]->find_grid_pos(size);
+		
+		GRID[boids[i]->grid_x][boids[i]->grid_y].push_back(boids[i]);
+		
 		boids[i]->draw();
 		boids[i]->draw_line();
 	}
@@ -144,6 +205,8 @@ void glPaint(void) {
 		obstacles[i]->draw();
 	}
 	
+	draw_grid();
+	
 	boids = all_boids;
 	
 	//dibuja el gizmo
@@ -154,7 +217,7 @@ void glPaint(void) {
 
 void draw_point(int x, int y){
 	glBegin(GL_POINTS);
-	glVertex2f(x-300,300-y);
+	glVertex2f(x-SIZE,SIZE-y);
 	glEnd();
 	displayGizmo();
 	
@@ -187,7 +250,7 @@ GLvoid window_key(unsigned char key, int x, int y) {
 		break;
 	case '1':{
 		Predator* p;
-		Point2D* pt = new Point2D(-300.0f, 300.0f);
+		Point2D* pt = new Point2D(-SIZE_F, SIZE_F);
 		p = new Predator;
 		p->set_pt(pt);
 		predators.push_back(p);
@@ -215,9 +278,9 @@ int main(int argc, char** argv) {
 	
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutInitWindowSize(600, 600); //tamaño de la ventana
+	glutInitWindowSize(800, 800); //tamaño de la ventana
 	glutInitWindowPosition(100, 100); //posicion de la ventana
-	glutCreateWindow("Grafito"); //titulo de la ventana
+	glutCreateWindow("My Boids project"); //titulo de la ventana
 	
 	init_GL(); //funcion de inicializacion de OpenGL
 	

@@ -17,8 +17,11 @@ class Predator{
 private:
 	float speed = 0.8f;
 	
+	Boid* cur_obj;
+	bool killed_obj = true;
+	
 	float view_angle = 135.0f;
-	float view_distance = 230.0f;
+	float view_distance = 69.0f;
 	
 	float objective_x, objective_y;
 	float move_x, move_y;

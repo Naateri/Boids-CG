@@ -7,22 +7,22 @@ int rdtsc(){
 }
 
 void Predator::move_up(){
-	if (pt->y >= 300) pt->y -= speed;
+	if (pt->y >= 400) pt->y -= speed;
 	else pt->y += speed;
 }
 
 void Predator::move_left(){
-	if (pt->x <= -300) pt->x += speed;
+	if (pt->x <= -400) pt->x += speed;
 	else pt->x -= speed;
 }	
 
 void Predator::move_down(){
-	if (pt->y <= -300) pt->y += speed;
+	if (pt->y <= -400) pt->y += speed;
 	else pt->y -= speed;
 }
 
 void Predator::move_right(){
-	if (pt->x >= 300) pt->x -= speed;
+	if (pt->x >= 400) pt->x -= speed;
 	else pt->x += speed;
 }
 
@@ -58,14 +58,22 @@ void Predator::move_towards_boids(){
 	float cur_dist, min_dist;
 	min_dist = 99999.0f;
 	
+	if (!killed_obj) {
+		objective_x = (cur_obj->get_pt()->x - this->pt->x);
+		objective_y = (cur_obj->get_pt()->y - this->pt->y);
+		return;
+	}
+	
 	for (int i = 0; i < boids.size(); i++){
 		obj = boids[i];
 		cur_dist = obj->get_pt()->distance(this->pt);
 		if (cur_dist <= this->view_distance && cur_dist < min_dist){
+			cur_obj = obj;
 			objective_x = (obj->get_pt()->x - this->pt->x);
 			objective_y = (obj->get_pt()->y - this->pt->y);
 		}
 	}
+	killed_obj = false;
 }
 
 void Predator::move(){
@@ -88,15 +96,16 @@ void Predator::move(){
 	pt->x += (move_x * speed);
 	pt->y += (move_y * speed);
 	
-	if (pt->y >= 300) pt->y--;
-	else if (pt->y <= -300) pt->y++;
-	if (pt->x >= 300) pt->x--;
-	else if (pt->x <= -300) pt->x++;
+	if (pt->y >= 400) pt->y--;
+	else if (pt->y <= -400) pt->y++;
+	if (pt->x >= 400) pt->x--;
+	else if (pt->x <= -400) pt->x++;
 	
 	if (all_boids.empty()) return;
 	for (int i = 0; i < all_boids.size(); i++){
 		if (all_boids[i]->get_pt()->distance(this->pt) <= 5.0f){
 			all_boids.erase(all_boids.begin() + i);
+			killed_obj = true;
 			i--;
 		}
 	}

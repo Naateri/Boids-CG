@@ -16,6 +16,8 @@
 #define REGULAR_SPEED 0.4f
 #define RUNNING_SPEED 0.8f
 
+#define GRID_SIZE 400
+
 class Predator;
 struct Rectangle;
 
@@ -29,16 +31,19 @@ struct RandNumbers{
 class Boid{
 private:
 	
+	float view_angle = 135.0f;
+	float view_distance = 100.0f;
 	float boid_speed = 0.5f;
 	
-	float view_angle = 135.0f;
-	float view_distance = 75.0f;
+	/*float boid_speed_x = 0.0f;
+	float boid_speed_y = 0.0f;*/
 	
 	float center_x, center_y;
 	float objective_x, objective_y;
 	float distance_x, distance_y;
 	float predator_x, predator_y;
 	float obstacle_x, obstacle_y;
+	float vel_x, vel_y;
 	
 	float move_x, move_y;
 	float last_move_x, last_move_y;
@@ -47,6 +52,7 @@ private:
 	int dir, max_moves = 20, cur_moves;
 	
 	Point2D* pt;
+	Objective* objective = nullptr;
 	void move_up();
 	void move_left();
 	void move_down();
@@ -58,8 +64,16 @@ private:
 	void avoid_predator();
 	void avoid_obstacle();
 	
+	void adapt_velocity();
+	
+	void gen_objective();
+	
 public:
+	Boid();
+	int grid_x, grid_y;
 	void set_pt(Point2D* pt);
+	float get_dist();
+	void find_grid_pos(int size);
 	Point2D* get_pt();
 	void move();
 	void draw();
