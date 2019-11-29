@@ -17,9 +17,15 @@ std::vector<Objective*> objectives = {};
 std::vector<Predator*> predators = {};
 std::vector<Rectangle*> obstacles = {};
 
+float getNorm(float x, float y){
+	return sqrt(pow(x, 2) + pow(y, 2));
+}
+
 Boid::Boid(){
 	grid_x = -1;
 	grid_y = -1;
+	acc_x = 0.0f; acc_y = 0.0f;
+	boid_speed_x = 1.0f; boid_speed_y = -1.0f;
 }
 
 void Boid::move_up(){
@@ -57,9 +63,17 @@ void Boid::move_towards_center(){
 			count++;
 		}
 	}
-		
-	center_x /= count;
-	center_y /= count;
+	
+	if (count > 0){
+		center_x /= count;
+		center_y /= count;
+	}
+	
+	center_x = center_x - this->pt->x;
+	center_y = center_y - this->pt->y;
+	
+	center_x = center_x - this->boid_speed_x;
+	center_y = center_y - this->boid_speed_y;
 }
 	
 void Boid::avoid_boids(){
@@ -77,10 +91,10 @@ void Boid::avoid_boids(){
 			//random_move();
 		}
 	}
-	/*if (count > 0){
+	if (count > 0){
 		distance_x /= count;
 		distance_y /= count;
-	}*/
+	}
 }
 
 void Boid::move_towards_objective(){
@@ -126,17 +140,19 @@ void Boid::adapt_velocity(){
 			&& boids[i]->get_pt()->y == pt->y) continue;
 		dist = this->pt->distance(boids[i]->get_pt());
 		if (dist <= this->view_distance){
-			vel_x += boids[i]->boid_speed;
-			vel_y += boids[i]->boid_speed;
+			vel_x += boids[i]->boid_speed_x;
+			vel_y += boids[i]->boid_speed_y;
 			count++;
 		}
 	}
 	
-	vel_x /= count;
-	vel_y /= count;
+	if (count > 0){
+		vel_x /= count;
+		vel_y /= count;
+	}
 	
-	vel_x = vel_x - this->boid_speed;
-	vel_y = vel_y - this->boid_speed;
+	vel_x = vel_x - this->boid_speed_x;
+	vel_y = vel_y - this->boid_speed_y;
 }
 
 void Boid::avoid_predator(){
@@ -160,32 +176,6 @@ void Boid::avoid_predator(){
 		}
 	}
 	
-}
-	
-void Boid::random_move(){
-		
-	if (cur_moves >= max_moves){
-		moved = false;
-	}
-	
-	if (!moved){
-		srand(temp.rdtsc());
-		dir = rand() % 4;
-		cur_moves = 0;
-		moved = true;
-	} else {
-		cur_moves++;
-	}
-	
-	if (dir == 0){ //move up
-		move_up();
-	} else if (dir == 1){ //move left
-		move_left();
-	} else if (dir == 2){ //move down
-		move_down();
-	} else { //move right
-		move_right();
-	}
 }
 
 void Boid::avoid_obstacle(){
@@ -221,20 +211,17 @@ void Boid::set_pt(Point2D* pt) { this->pt = pt; }
 Point2D* Boid::get_pt() { return this->pt; }
 	
 void Boid::move(){
-	
-	//random_move();
-	
 	move_towards_center();
 	
 	avoid_boids();
 	
 	adapt_velocity();
 	
-	move_towards_objective();
+	//move_towards_objective();
 	
-	avoid_predator();
+	//avoid_predator();
 	
-	avoid_obstacle();
+	//avoid_obstacle();
 	
 	move_x = 0.0f; move_y = 0.0f;
 	float normal;
@@ -246,15 +233,15 @@ void Boid::move(){
 		move_x = objective_x;
 		move_y = objective_y;
 	} else {
-		move_x = ((center_x/100) + distance_x + (vel_x/8) + objective_x/2 + boids.size()*predator_x
+		move_x = ((center_x/100) + distance_x + (vel_x/8) + objective_x/2 + predator_x
 				   + obstacle_x);
-		move_y = ((center_y/100) + distance_y + (vel_y/8) + objective_y/2 + boids.size()*predator_y
+		move_y = ((center_y/100) + distance_y + (vel_y/8) + objective_y/2 + predator_y
 				   + obstacle_y);
 	}
 	
-	if (objective_x == 0 && objective_y == 0){
+	/*if (objective_x == 0 && objective_y == 0){
 		gen_objective();
-	}
+	}*/
 	
 	/*if (move_x == 0 && move_y == 0) {
 		random_move();
@@ -265,76 +252,37 @@ void Boid::move(){
 	if (move_x != 0) move_x /= normal;
 	if (move_y != 0) move_y /= normal;
 	
-	//cout << "move_x " << move_x << ' ' << move_y << endl;
+	acc_x += move_x; acc_y += move_y;
 	
-	/*boid_speed_x *= move_x;
-	boid_speed_y *= move_y;*/
+	/*pt->x += (boid_speed * move_x);
+	pt->y += (boid_speed * move_y);*/
 	
-	pt->x += (boid_speed * move_x);
-	pt->y += (boid_speed * move_y);
+	pt->x += boid_speed_x;
+	pt->y += boid_speed_y;
 	
-	/*pt->x += boid_speed_x;
-	pt->y += boid_speed_y;*/
+	boid_speed_x += acc_x;
+	boid_speed_y += acc_y;
+	
+	if (getNorm(boid_speed_x, boid_speed_y) >= abs(max_speed)){
+		float norm = getNorm(boid_speed_x, boid_speed_y);
+		boid_speed_x = boid_speed_x / norm * max_speed;
+		boid_speed_y = boid_speed_y / norm * max_speed;
+	}
 	
 	last_move_x = move_x;
 	last_move_y = move_y;
 	
-	if (pt->y >= GRID_SIZE) pt->y--;
+	/*if (pt->y >= GRID_SIZE) pt->y = pt->y--;
 	else if (pt->y <= -GRID_SIZE) pt->y++;
 	if (pt->x >= GRID_SIZE) pt->x--;
-	else if (pt->x <= -GRID_SIZE) pt->x++;
-	
-//	pt->x += objective_x;
-//	pt->y += objective_y;
-	
-	if (!objectives.empty()){
-		for (int i = 0; i < objectives.size(); i++){
-			if (objectives[i]->pt->distance(this->pt) <= 7.5f){
-				objectives[i] = nullptr;
-				objectives.erase(objectives.begin() + i);
-				i--;
-			}
-		}
-	}
-	
-	//random_move();
+	else if (pt->x <= -GRID_SIZE) pt->x++;*/
 }
 
-void Boid::gen_objective(){
-	
-	RandNumbers rand_num;
-	
-	bool finished = false;
-	
-	srand(rand_num.rdtsc());
-	int temp_x, temp_y, sign;
-	
-	Point2D* pt = new Point2D;
-	Objective* temp = new Objective;
-	
-	do{
-	
-		temp_x = rand() % ((int)this->view_distance);
-		temp_y = rand() % ((int)this->view_distance);
-		
-		sign = rand() % 2;
-		
-		temp->pt = pt;
-		if (sign == 0){
-			temp->pt->x = temp_x + this->pt->x;
-			temp->pt->y = temp_y + this->pt->y;
-		} else {
-			temp->pt->x = this->pt->x - temp_x;
-			temp->pt->y = this->pt->y - temp_y;
-		}
-		
-		if (temp->pt->y >= GRID_SIZE || temp->pt->y <= -GRID_SIZE) finished = false;
-		else if (temp->pt->x >= GRID_SIZE || temp->pt->x <= -GRID_SIZE) finished = false;
-		else finished = true;
-		
-	} while (!finished);
-	
-	objectives.push_back(temp);
+void Boid::edges(){
+	if (pt->y >= GRID_SIZE) pt->y = 0-GRID_SIZE;
+	else if (pt->y <= -GRID_SIZE) pt->y = GRID_SIZE;
+	if (pt->x >= GRID_SIZE) pt->x = 0-GRID_SIZE;
+	else if (pt->x <= -GRID_SIZE) pt->y = GRID_SIZE;
 }
 
 float Boid::get_dist(){

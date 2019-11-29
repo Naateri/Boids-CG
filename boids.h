@@ -17,6 +17,7 @@
 #define RUNNING_SPEED 0.8f
 
 #define GRID_SIZE 400
+#define LE_SIZE 800
 
 class Predator;
 struct Rectangle;
@@ -34,6 +35,7 @@ private:
 	float view_angle = 135.0f;
 	float view_distance = 100.0f;
 	float boid_speed = 0.5f;
+	float max_speed = 2.0f;
 	
 	/*float boid_speed_x = 0.0f;
 	float boid_speed_y = 0.0f;*/
@@ -45,6 +47,9 @@ private:
 	float obstacle_x, obstacle_y;
 	float vel_x, vel_y;
 	
+	float boid_speed_x, boid_speed_y;
+	float acc_x, acc_y;
+	
 	float move_x, move_y;
 	float last_move_x, last_move_y;
 	bool moved = false;
@@ -53,6 +58,9 @@ private:
 	
 	Point2D* pt;
 	Objective* objective = nullptr;
+	
+	//float getNorm(float x, float y);
+	
 	void move_up();
 	void move_left();
 	void move_down();
@@ -66,8 +74,6 @@ private:
 	
 	void adapt_velocity();
 	
-	void gen_objective();
-	
 public:
 	Boid();
 	int grid_x, grid_y;
@@ -78,6 +84,8 @@ public:
 	void move();
 	void draw();
 	void draw_line();
+	void gen_objective();
+	void edges();
 };
 
 extern std::vector<Boid*> boids;

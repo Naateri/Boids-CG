@@ -13,8 +13,9 @@
 
 #define KEY_ESC 27
 #define BOIDS 250
+#define OBJECTIVES 40
 
-#define SIZE 400
+#define SIZE 800
 #define SIZE_F 400.0f
 
 using namespace std;
@@ -61,7 +62,9 @@ void generate_points(int num_points){
 	for(int i = 0; i < num_points; i++){
 		x = rand()%(SIZE << 1);
 		y = rand()%(SIZE << 1);
+		//x = rand() % SIZE; y = rand() % SIZE;
 		pt = new Point2D(x - SIZE, SIZE - y);
+		//pt = new Point2D(x, y);
 		boid = new Boid;
 		//points.push_back(pt);
 		boid->set_pt(pt);
@@ -71,6 +74,7 @@ void generate_points(int num_points){
 	float view_distance = boid->get_dist();
 	cout << view_distance << endl;
 	size = (SIZE << 1)/view_distance + 1;
+	//size = SIZE / view_distance + 1;
 	
 	//create matrix
 	
@@ -100,10 +104,12 @@ void OnMouseClick(int button, int state, int x, int y){
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
 		if (draw_rectangle){
 			pt = new Point2D(x-SIZE, SIZE-y);
+			//pt = new Point2D(x, y);
 			click++;
 			if (click == 2) {
 				click = 0;
 				pt = new Point2D(x - SIZE, SIZE - y);
+				//pt = new Point2D(x, y);
 				cout << x << ' ' << y << endl;
 				rect = new Rectangle(all_points[all_points.size() - 1], pt);
 				rect->print();
@@ -161,6 +167,31 @@ void draw_grid(){
 	glEnd();
 }
 
+void gen_objectives(){
+	RandNumbers rand_num;
+	
+	srand(rand_num.rdtsc());
+	int temp_x, temp_y;
+	
+	Point2D* pt = new Point2D;
+	Objective* temp = new Objective;
+	Boid* test;
+	
+	do{
+		
+		temp_x = rand() % SIZE;
+		temp_y = rand() % SIZE;
+		
+		temp->pt = pt;
+		temp->pt->x = temp_x - SIZE;
+		temp->pt->y = SIZE - temp_y;
+		
+		objectives.push_back(temp);
+		
+	} while (objectives.size() <= OBJECTIVES);
+	
+}
+
 //funcion llamada a cada imagen
 void glPaint(void) {
 	
@@ -171,6 +202,7 @@ void glPaint(void) {
 	glClear(GL_COLOR_BUFFER_BIT); //CAMBIO
 	glLoadIdentity();
 	glOrtho(-SIZE_F,  SIZE_F,-SIZE_F, SIZE_F, -1.0f, 1.0f);
+	//glOrtho(0, SIZE, 0, SIZE, -1.0f, 1.0f);
 	//glPointSize(6);
 	//glBegin(GL_POINTS);
 	
@@ -183,14 +215,20 @@ void glPaint(void) {
 	
 	clear_grid();
 	
+	/*if (objectives.size() < OBJECTIVES){
+		gen_objectives();
+	}*/
+	
 	for (int i = 0; i < boids.size(); i++){
 		boids[i]->move();
-		boids[i]->find_grid_pos(size);
+		/*boids[i]->find_grid_pos(size);
 		
-		GRID[boids[i]->grid_x][boids[i]->grid_y].push_back(boids[i]);
+		GRID[boids[i]->grid_x][boids[i]->grid_y].push_back(boids[i]);*/
 		
 		boids[i]->draw();
-		boids[i]->draw_line();
+		//boids[i]->draw_line();
+		
+		boids[i]->edges();
 	}
 	
 	//predator
@@ -273,6 +311,7 @@ GLvoid window_key(unsigned char key, int x, int y) {
 int main(int argc, char** argv) {
 	
 	generate_points(BOIDS);
+	//gen_objectives();
 	
 	//Inicializacion de la GLUT
 	
