@@ -12,6 +12,8 @@
 #include "objective.h"
 #include "predator.h"
 #include "rectangle.h"
+#include "circle.h"
+#include "TextureManager.h"
 
 #define REGULAR_SPEED 0.4f
 #define RUNNING_SPEED 0.8f
@@ -31,6 +33,8 @@ struct RandNumbers{
 
 class Boid{
 private:
+	
+	bool avoiding;
 	
 	float view_angle = 135.0f;
 	float view_distance = 100.0f;
@@ -75,6 +79,7 @@ private:
 	void adapt_velocity();
 	
 public:
+	GLuint texture;
 	Boid();
 	int grid_x, grid_y;
 	void set_pt(Point2D* pt);
@@ -91,6 +96,7 @@ public:
 extern std::vector<Boid*> boids;
 extern std::vector<Objective*> objectives;
 extern std::vector<Predator*> predators;
-extern std::vector<Rectangle*> obstacles;
+//extern std::vector<Rectangle*> obstacles;
+extern std::vector<Circle*> obstacles;
 
 #endif

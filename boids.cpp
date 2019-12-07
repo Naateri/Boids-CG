@@ -15,7 +15,7 @@ RandNumbers temp;
 std::vector<Boid*> boids;
 std::vector<Objective*> objectives = {};
 std::vector<Predator*> predators = {};
-std::vector<Rectangle*> obstacles = {};
+std::vector<Circle*> obstacles = {};
 
 float getNorm(float x, float y){
 	return sqrt(pow(x, 2) + pow(y, 2));
@@ -26,6 +26,7 @@ Boid::Boid(){
 	grid_y = -1;
 	acc_x = 0.0f; acc_y = 0.0f;
 	boid_speed_x = 1.0f; boid_speed_y = -1.0f;
+	//texture = TextureManager::Inst()->LoadTexture("fish.png", GL_BGRA_EXT, GL_RGBA);
 }
 
 void Boid::move_up(){
@@ -97,40 +98,6 @@ void Boid::avoid_boids(){
 	}
 }
 
-void Boid::move_towards_objective(){
-	objective_x = 0; objective_y = 0;
-	go_to_obj_only = false;
-	float min_dist = 9999.0f;
-	if (objectives.empty()) return;
-	Objective* obj = objectives[0];
-	
-	/*if (objective != nullptr){
-		float dist = objective->pt->distance(this->pt);
-		objective_x = (objective->pt->x - this->pt->x);
-		objective_y = (objective->pt->y - this->pt->y);
-		return;
-	}*/
-	
-	for (int i = 0; i < objectives.size(); i++){
-		obj = objectives[i];
-		float dist = obj->pt->distance(this->pt);
-		if (dist <= this->view_distance){
-			//objective_x += (obj->pt->x - this->pt->x);
-			//objective_y += (obj->pt->y - this->pt->y);
-			/*if (dist <= 20.0f){
-				go_to_obj_only = false;
-				this->boid_speed = RUNNING_SPEED;*/
-				if (dist < min_dist){
-					objective_x = (obj->pt->x - this->pt->x);
-					objective_y = (obj->pt->y - this->pt->y);
-					min_dist = dist;
-					objective = obj;
-				}
-			//}
-		}
-	}
-}
-
 void Boid::adapt_velocity(){
 	vel_x = 0; vel_y = 0;
 	int count = 0;
@@ -179,31 +146,79 @@ void Boid::avoid_predator(){
 }
 
 void Boid::avoid_obstacle(){
-	float min_distance = 9999.0f;
 	obstacle_x = 0.0f;
 	obstacle_y = 0.0f;
+	avoiding = false;
 	
-	float ahead_x = pt->x + last_move_x * 15;
-	float ahead_y = pt->y + last_move_y * 15;
+	/*
+	float temp_spd_x, temp_spd_y, normal, dynamic_length;
+	normal = sqrt(pow(this->boid_speed_x,2) + pow(this->boid_speed_y,2));
+	temp_spd_x = this->boid_speed_x / normal; temp_spd_y = this->boid_speed_y / normal;
+	
+	dynamic_length = normal / max_speed;
+	
+	//float ahead_x = pt->x + temp_spd_x * dynamic_length;
+	//float ahead_y = pt->y + temp_spd_y * dynamic_length;
+	
+	float ahead_x = pt->x + temp_spd_x * this->view_distance;
+	float ahead_y = pt->y + temp_spd_y * this->view_distance;
+	
 	Point2D* ahead = new Point2D(ahead_x, ahead_y);
 	Point2D* ahead2 = new Point2D(ahead_x/2.0f, ahead_y/2.0f);
 	
+	Point2D* mostThreatening = 0;
+	
 	for(int i = 0; i < obstacles.size(); i++){
-		Point2D* center = obstacles[i]->get_center();
+		Point2D* center = obstacles[i]->center;
 		float dist = ahead->distance(center);
 		float dist2 = ahead2->distance(center);
-		if (dist <= obstacles[i]->radius || dist2 <= obstacles[i]->radius ){
-			//std::cout << "MIN_DIST\n";
-			if (obstacles[i]->distance(pt) < min_distance){
-				obstacle_x = (ahead->x - center->x);
-				obstacle_y = (ahead->y - center->y);
-				min_distance = obstacles[i]->distance(pt);
+		float dist3 = pt->distance(center);
+		
+		float radius = obstacles[i]->radius + 50.0f;
+		
+		if (dist <= radius || dist2 <= radius || dist3 <= radius ){ //colission
+			
+			if (mostThreatening == 0 || pt->distance(center) < pt->distance(mostThreatening)){
+				mostThreatening = center;
 			}
+		}
+	}*/
+	
+	int count = 0;
+	Point2D* mostThreatening = 0;
+	float ahead_x = pt->x + this->view_distance;
+	float ahead_y = pt->y + this->view_distance;
+	
+	for(int i = 0; i < obstacles.size(); i++){
+		float dist = obstacles[i]->center->distance(this->pt);
+		float radius = obstacles[i]->radius * 2.0;
+		if (dist < radius){
+			
+			avoiding = true;
+			
+			if (mostThreatening == 0 || pt->distance(obstacles[i]->center) < pt->distance(mostThreatening)){
+				mostThreatening = obstacles[i]->center;
+			}
+			
+			obstacle_x = obstacle_x - (obstacles[i]->center->x - pt->x);
+			obstacle_y = obstacle_y - (obstacles[i]->center->y - pt->y);
+			count++;
 		}
 	}
 	
-	obstacle_x *= 5.0f;
-	obstacle_y *= 5.0f;
+	/*
+	if (mostThreatening != 0){
+		obstacle_x = (pt->x - mostThreatening->x);
+		obstacle_y = (pt->y - mostThreatening->y);
+	}
+	*/
+	
+	/*
+	if (count > 0){
+		obstacle_x = obstacle_x / count;
+		obstacle_y = obstacle_y / count;
+	}*/
+	
 }
 	
 void Boid::set_pt(Point2D* pt) { this->pt = pt; }
@@ -221,7 +236,7 @@ void Boid::move(){
 	
 	//avoid_predator();
 	
-	//avoid_obstacle();
+	avoid_obstacle();
 	
 	move_x = 0.0f; move_y = 0.0f;
 	float normal;
@@ -233,10 +248,10 @@ void Boid::move(){
 		move_x = objective_x;
 		move_y = objective_y;
 	} else {
-		move_x = ((center_x/100) + distance_x + (vel_x/8) + objective_x/2 + predator_x
-				   + obstacle_x);
-		move_y = ((center_y/100) + distance_y + (vel_y/8) + objective_y/2 + predator_y
-				   + obstacle_y);
+		move_x = ((center_x/100) + distance_x + (vel_x/8) + predator_x
+				   + 10*obstacle_x);
+		move_y = ((center_y/100) + distance_y + (vel_y/8) + predator_y
+				   + 10*obstacle_y);
 	}
 	
 	/*if (objective_x == 0 && objective_y == 0){
@@ -313,11 +328,36 @@ void Boid::find_grid_pos(int size){
 }
 
 void Boid::draw(){
-	glPointSize(6);
-	glBegin(GL_POINTS);
-	glColor3d(0, 0, 255);
-	glVertex2f(pt->x, pt->y);
+	//glPointSize(6);
+	//glBegin(GL_POINTS);
+	
+	/*if (!avoiding) glColor3d(0, 0, 255);
+	else glColor3d(255,0,0);*/
+	glColor3d(255,255,255);
+	//glVertex2f(pt->x, pt->y);
+	
+	float tam = 2.0f;
+	
+	cout << "Texture " << texture << endl;
+	
+	glPushMatrix();
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glBegin(GL_QUADS);
+	
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex3f(pt->x - tam, pt->y - tam, 0.0f);
+	
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex3f(pt->x - tam, pt->y + tam, 0.0f);
+	
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex3f(pt->x + tam, pt->y + tam, 0.0f);
+	
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex3f(pt->x + tam, pt->y - tam, 0.0f);
+	
 	glEnd();
+	glPopMatrix();
 }
 
 void Boid::draw_line(){

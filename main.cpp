@@ -10,10 +10,13 @@
 #include "objective.h"
 #include "predator.h"
 #include "rectangle.h"
+#include "circle.h"
 
 #define KEY_ESC 27
-#define BOIDS 250
+#define BOIDS 200
 #define OBJECTIVES 40
+#define OBSTACLES 4
+#define RADIUS 50.0f
 
 #define SIZE 800
 #define SIZE_F 400.0f
@@ -21,6 +24,7 @@
 using namespace std;
 
 RandNumbers temp1;
+GLuint fish_texture;
 
 float distance(Point2D* a, Point2D* b){
 	return sqrt(pow(a->x - b->x, 2) + pow(a->y - b->y, 2));
@@ -53,6 +57,33 @@ bool r = false;
 
 void draw_point(int x,int y);
 
+void gen_obstacles(float radius){
+	srand(temp1.rdtsc());
+	//Rectangle* rect;
+	Circle* circ;
+	Point2D* pt, *pt2;
+	
+	int x, y;
+	for(int i = 0; i < OBSTACLES; i++){
+		x = rand()%(SIZE);
+		y = rand()%(SIZE);
+		
+		pt = new Point2D(x - SIZE_F, SIZE_F - y);
+		
+		/*x = rand()%(SIZE << 1);
+		y = rand()%(SIZE << 1);
+		
+		pt2 = new Point2D(x - SIZE, SIZE - y);
+		
+		rect = new Rectangle(pt, pt2);*/
+		
+		circ = new Circle(pt, radius);
+		
+		circ->print();
+		obstacles.push_back(circ);
+	}
+}
+
 
 void generate_points(int num_points){
 	srand(temp1.rdtsc());
@@ -60,16 +91,18 @@ void generate_points(int num_points){
 	Boid* boid;
 	int x, y;
 	for(int i = 0; i < num_points; i++){
-		x = rand()%(SIZE << 1);
-		y = rand()%(SIZE << 1);
-		//x = rand() % SIZE; y = rand() % SIZE;
-		pt = new Point2D(x - SIZE, SIZE - y);
-		//pt = new Point2D(x, y);
+		/*x = rand()%(SIZE << 1);
+		y = rand()%(SIZE << 1);*/
+		x = rand() % SIZE; y = rand() % SIZE;
+		pt = new Point2D(x - SIZE_F, SIZE_F - y);
 		boid = new Boid;
-		//points.push_back(pt);
 		boid->set_pt(pt);
+		boid->texture = fish_texture;
 		boids.push_back(boid);
+		
 	}
+	
+	cout << "Boids created\n";
 	
 	float view_distance = boid->get_dist();
 	cout << view_distance << endl;
@@ -102,29 +135,11 @@ void OnMouseClick(int button, int state, int x, int y){
 	Boid* boid;
 	Rectangle* rect;
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-		if (draw_rectangle){
-			pt = new Point2D(x-SIZE, SIZE-y);
-			//pt = new Point2D(x, y);
-			click++;
-			if (click == 2) {
-				click = 0;
-				pt = new Point2D(x - SIZE, SIZE - y);
-				//pt = new Point2D(x, y);
-				cout << x << ' ' << y << endl;
-				rect = new Rectangle(all_points[all_points.size() - 1], pt);
-				rect->print();
-				obstacles.push_back(rect);
-				cout << "Obstacle inserted\n";
-				pt = 0; prev_pt = 0;
-			}
-			all_points.push_back(pt);
-		} else {
-			pt = new Point2D(x - SIZE, SIZE - y);
-			cout << x << ' ' << y << endl;
-			obj = new Objective;
-			obj->pt = pt;
-			objectives.push_back(obj);
-		}
+		pt = new Point2D(x - SIZE, SIZE - y);
+		cout << x << ' ' << y << endl;
+		obj = new Objective;
+		obj->pt = pt;
+		objectives.push_back(obj);
 	}else if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
 		r = true;
 		pt = new Point2D(x-SIZE, SIZE-y);
@@ -167,31 +182,6 @@ void draw_grid(){
 	glEnd();
 }
 
-void gen_objectives(){
-	RandNumbers rand_num;
-	
-	srand(rand_num.rdtsc());
-	int temp_x, temp_y;
-	
-	Point2D* pt = new Point2D;
-	Objective* temp = new Objective;
-	Boid* test;
-	
-	do{
-		
-		temp_x = rand() % SIZE;
-		temp_y = rand() % SIZE;
-		
-		temp->pt = pt;
-		temp->pt->x = temp_x - SIZE;
-		temp->pt->y = SIZE - temp_y;
-		
-		objectives.push_back(temp);
-		
-	} while (objectives.size() <= OBJECTIVES);
-	
-}
-
 //funcion llamada a cada imagen
 void glPaint(void) {
 	
@@ -202,34 +192,30 @@ void glPaint(void) {
 	glClear(GL_COLOR_BUFFER_BIT); //CAMBIO
 	glLoadIdentity();
 	glOrtho(-SIZE_F,  SIZE_F,-SIZE_F, SIZE_F, -1.0f, 1.0f);
-	//glOrtho(0, SIZE, 0, SIZE, -1.0f, 1.0f);
-	//glPointSize(6);
-	//glBegin(GL_POINTS);
 	
-	//drawing objectives
-	/*for (int i = 0; i < objectives.size(); i++){
-		objectives[i]->draw();
-	}*/
-	
+	/*gluPerspective(45.0, 1.0, 1.0, 1200.0);
+	glTranslatef(0, 0, -1200.0);*/
+		
 	//moving boids
 	
 	clear_grid();
 	
-	/*if (objectives.size() < OBJECTIVES){
-		gen_objectives();
-	}*/
-	
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_BLEND);
 	for (int i = 0; i < boids.size(); i++){
 		boids[i]->move();
-		/*boids[i]->find_grid_pos(size);
+		boids[i]->find_grid_pos(size);
 		
-		GRID[boids[i]->grid_x][boids[i]->grid_y].push_back(boids[i]);*/
+		GRID[boids[i]->grid_x][boids[i]->grid_y].push_back(boids[i]);
 		
 		boids[i]->draw();
 		//boids[i]->draw_line();
 		
 		boids[i]->edges();
 	}
+	//glDisable(GL_BLEND);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	//predator
 	for (int i = 0; i < predators.size(); i++){
@@ -248,7 +234,7 @@ void glPaint(void) {
 	boids = all_boids;
 	
 	//dibuja el gizmo
-	displayGizmo();
+	//displayGizmo();
 	//doble buffer, mantener esta instruccion al fin de la funcion
 	glutSwapBuffers();
 }
@@ -269,9 +255,14 @@ void init_GL(void) {
 	//Color del fondo de la escena
 	glClearColor(0, 0, 0, 0.0f); //(R, G, B, transparencia) en este caso un fondo negro
 	
+	//glEnable(GL_TEXTURE_2D);
+	
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
 	//modo projeccion
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+	
 }
 
 //en el caso que la ventana cambie de tamaño
@@ -310,8 +301,7 @@ GLvoid window_key(unsigned char key, int x, int y) {
 //
 int main(int argc, char** argv) {
 	
-	generate_points(BOIDS);
-	//gen_objectives();
+	//fish_texture = TextureManager::Inst()->LoadTexture("Textures/fish.png", GL_BGRA_EXT, GL_RGBA);
 	
 	//Inicializacion de la GLUT
 	
@@ -322,6 +312,16 @@ int main(int argc, char** argv) {
 	glutCreateWindow("My Boids project"); //titulo de la ventana
 	
 	init_GL(); //funcion de inicializacion de OpenGL
+	
+	cout << "initgl\n";
+	
+	//fish_texture = TextureManager::Inst()->LoadTexture("nemo.jpg", GL_RGB, GL_RGB);
+	fish_texture = TextureManager::Inst()->LoadTexture("test_fish3.jpg", GL_RGB, GL_RGB);
+	//fish_texture = TextureManager::Inst()->LoadTexture("real_fish.png", GL_RGBA, GL_RGBA);
+	
+	generate_points(BOIDS);
+	//gen_objectives();
+	gen_obstacles(RADIUS);
 	
 	glutDisplayFunc(glPaint);
 	glutReshapeFunc(&window_redraw);
