@@ -79,7 +79,6 @@ private:
 	void adapt_velocity();
 	
 public:
-	GLuint texture;
 	Boid();
 	int grid_x, grid_y;
 	void set_pt(Point2D* pt);
@@ -98,5 +97,7 @@ extern std::vector<Objective*> objectives;
 extern std::vector<Predator*> predators;
 //extern std::vector<Rectangle*> obstacles;
 extern std::vector<Circle*> obstacles;
+extern GLint fish_texture;
+
 
 #endif

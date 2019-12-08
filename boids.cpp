@@ -333,15 +333,18 @@ void Boid::draw(){
 	
 	/*if (!avoiding) glColor3d(0, 0, 255);
 	else glColor3d(255,0,0);*/
-	glColor3d(255,255,255);
+	//glColor3d(255,255,255);
 	//glVertex2f(pt->x, pt->y);
 	
-	float tam = 2.0f;
+	float tam = 5.0f;
 	
-	cout << "Texture " << texture << endl;
+	//cout << "Texture " << texture << endl;
 	
 	glPushMatrix();
-	glBindTexture(GL_TEXTURE_2D, texture);
+	glEnable(GL_TEXTURE_2D);
+	glColor3d(255,255,255);
+	
+	glBindTexture(GL_TEXTURE_2D, fish_texture);
 	glBegin(GL_QUADS);
 	
 	glTexCoord2f(0.0f, 0.0f);
@@ -357,6 +360,8 @@ void Boid::draw(){
 	glVertex3f(pt->x + tam, pt->y - tam, 0.0f);
 	
 	glEnd();
+	
+	glDisable(GL_TEXTURE_2D);
 	glPopMatrix();
 }
 

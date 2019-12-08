@@ -24,7 +24,7 @@
 using namespace std;
 
 RandNumbers temp1;
-GLuint fish_texture;
+GLint fish_texture;
 
 float distance(Point2D* a, Point2D* b){
 	return sqrt(pow(a->x - b->x, 2) + pow(a->y - b->y, 2));
@@ -97,7 +97,7 @@ void generate_points(int num_points){
 		pt = new Point2D(x - SIZE_F, SIZE_F - y);
 		boid = new Boid;
 		boid->set_pt(pt);
-		boid->texture = fish_texture;
+		
 		boids.push_back(boid);
 		
 	}
@@ -164,6 +164,7 @@ void idle(){ // AGREGAR ESTA FUNCION
 }
 
 void draw_grid(){
+	glPushMatrix();
 	glColor3d(0,255,0);
 	glLineWidth(2);
 	glBegin(GL_LINES);
@@ -180,6 +181,7 @@ void draw_grid(){
 		//glEnd();
 	}
 	glEnd();
+	glPopMatrix();
 }
 
 //funcion llamada a cada imagen
@@ -193,6 +195,7 @@ void glPaint(void) {
 	glLoadIdentity();
 	glOrtho(-SIZE_F,  SIZE_F,-SIZE_F, SIZE_F, -1.0f, 1.0f);
 	
+	
 	/*gluPerspective(45.0, 1.0, 1.0, 1200.0);
 	glTranslatef(0, 0, -1200.0);*/
 		
@@ -200,8 +203,7 @@ void glPaint(void) {
 	
 	clear_grid();
 	
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glEnable(GL_TEXTURE_2D);
+	
 	glEnable(GL_BLEND);
 	for (int i = 0; i < boids.size(); i++){
 		boids[i]->move();
@@ -214,8 +216,7 @@ void glPaint(void) {
 		
 		boids[i]->edges();
 	}
-	//glDisable(GL_BLEND);
-	glBindTexture(GL_TEXTURE_2D, 0);
+
 	
 	//predator
 	for (int i = 0; i < predators.size(); i++){
@@ -316,7 +317,7 @@ int main(int argc, char** argv) {
 	cout << "initgl\n";
 	
 	//fish_texture = TextureManager::Inst()->LoadTexture("nemo.jpg", GL_RGB, GL_RGB);
-	fish_texture = TextureManager::Inst()->LoadTexture("test_fish3.jpg", GL_RGB, GL_RGB);
+	fish_texture = TextureManager::Inst()->LoadTexture("fish.png", GL_BGRA_EXT, GL_RGBA);
 	//fish_texture = TextureManager::Inst()->LoadTexture("real_fish.png", GL_RGBA, GL_RGBA);
 	
 	generate_points(BOIDS);
