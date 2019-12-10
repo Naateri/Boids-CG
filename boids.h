@@ -36,6 +36,10 @@ private:
 	
 	bool avoiding;
 	
+	bool mesh = true;
+	
+	int grid_size;
+	
 	float view_angle = 135.0f;
 	float view_distance = 100.0f;
 	float boid_speed = 0.5f;
@@ -98,5 +102,6 @@ extern std::vector<Objective*> objectives;
 extern std::vector<Predator*> predators;
 //extern std::vector<Rectangle*> obstacles;
 extern std::vector<Circle*> obstacles;
+extern std::vector<Boid*>** GRID;
 
 #endif

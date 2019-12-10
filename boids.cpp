@@ -16,6 +16,7 @@ std::vector<Boid*> boids;
 std::vector<Objective*> objectives = {};
 std::vector<Predator*> predators = {};
 std::vector<Circle*> obstacles = {};
+std::vector<Boid*>** GRID = {};
 
 float getNorm(float x, float y){
 	return sqrt(pow(x, 2) + pow(y, 2));
@@ -53,16 +54,35 @@ void Boid::move_towards_center(){
 	center_x = 0;
 	center_y = 0;
 	int count = 0;
+	
+	if (!mesh){
+	
 	for(int i = 0; i < boids.size(); i++){
 		if (boids[i]->get_pt()->x == pt->x 
 			&& boids[i]->get_pt()->y == pt->y) continue;
 		if (boids[i]->get_pt()->distance(this->pt) <= this->view_distance){
-			/*center_x += (boids[i]->get_pt()->x - this->pt->x);
-			center_y += (boids[i]->get_pt()->y - this->pt->y);*/
 			center_x += (boids[i]->get_pt()->x);
 			center_y += (boids[i]->get_pt()->y);
 			count++;
 		}
+	}
+	
+	} else {
+	
+	std::vector<Boid*> temp;
+	for(int i = grid_x-1; i <= grid_x+1; i++){
+		if (i < 0 || i >= grid_size) continue;
+		for(int j = grid_y-1; j <= grid_y+1; j++){
+			if (j < 0 || j >= grid_size) continue;
+			temp = GRID[i][j];
+			for (int k = 0; k < temp.size(); k++){
+				center_x += temp[k]->get_pt()->x;
+				center_y += temp[k]->get_pt()->y;
+				count++;
+			}
+		}
+	}
+	
 	}
 	
 	if (count > 0){
@@ -81,6 +101,9 @@ void Boid::avoid_boids(){
 	distance_x = 0;
 	distance_y = 0;
 	int count = 0;
+	
+	if (!mesh){
+	
 	for(int i = 0; i < boids.size(); i++){
 		if (boids[i]->get_pt()->x == pt->x 
 			&& boids[i]->get_pt()->y == pt->y) continue;
@@ -89,9 +112,30 @@ void Boid::avoid_boids(){
 			distance_x = distance_x - (boids[i]->get_pt()->x - this->pt->x);
 			distance_y = distance_y - (boids[i]->get_pt()->y - this->pt->y);
 			count++;
-			//random_move();
 		}
 	}
+	
+	} else {
+	
+	std::vector<Boid*> temp;
+	for(int i = grid_x-1; i <= grid_x+1; i++){
+		if (i < 0 || i >= grid_size) continue;
+		for(int j = grid_y-1; j <= grid_y+1; j++){
+			if (j < 0 || j >= grid_size) continue;
+			temp = GRID[i][j];
+			for (int k = 0; k < temp.size(); k++){
+				float dist = temp[k]->get_pt()->distance(this->pt);
+				if (dist <= 20.0f){
+					distance_x = distance_x - (temp[k]->get_pt()->x - this->pt->x);
+					distance_y = distance_y - (temp[k]->get_pt()->y - this->pt->y);
+					count++;
+				}
+			}
+		}
+	}
+	
+	}
+	
 	if (count > 0){
 		distance_x /= count;
 		distance_y /= count;
@@ -102,6 +146,9 @@ void Boid::adapt_velocity(){
 	vel_x = 0; vel_y = 0;
 	int count = 0;
 	float dist;
+	
+	if (!mesh){
+	
 	for(int i = 0; i < boids.size(); i++){
 		if (boids[i]->get_pt()->x == pt->x 
 			&& boids[i]->get_pt()->y == pt->y) continue;
@@ -111,6 +158,23 @@ void Boid::adapt_velocity(){
 			vel_y += boids[i]->boid_speed_y;
 			count++;
 		}
+	}
+	} else {
+	
+	std::vector<Boid*> temp;
+	for(int i = grid_x-1; i <= grid_x+1; i++){
+		if (i < 0 || i >= grid_size) continue;
+		for(int j = grid_y-1; j <= grid_y+1; j++){
+			if (j < 0 || j >= grid_size) continue;
+			temp = GRID[i][j];
+			for (int k = 0; k < temp.size(); k++){
+				vel_x += temp[k]->boid_speed_x;
+				vel_y += temp[k]->boid_speed_y;
+				count++;
+			}
+		}
+	}
+	
 	}
 	
 	if (count > 0){
@@ -150,39 +214,16 @@ void Boid::avoid_obstacle(){
 	obstacle_y = 0.0f;
 	avoiding = false;
 	
-	/*
-	float temp_spd_x, temp_spd_y, normal, dynamic_length;
-	normal = sqrt(pow(this->boid_speed_x,2) + pow(this->boid_speed_y,2));
-	temp_spd_x = this->boid_speed_x / normal; temp_spd_y = this->boid_speed_y / normal;
-	
-	dynamic_length = normal / max_speed;
-	
+	float normal = getNorm(this->boid_speed_x, this->boid_speed_y);
+	float temp_spd_x = this->boid_speed_x / normal, temp_spd_y = this->boid_speed_y / normal;
 	//float ahead_x = pt->x + temp_spd_x * dynamic_length;
 	//float ahead_y = pt->y + temp_spd_y * dynamic_length;
 	
-	float ahead_x = pt->x + temp_spd_x * this->view_distance;
-	float ahead_y = pt->y + temp_spd_y * this->view_distance;
+	//float ahead_x = pt->x + temp_spd_x * this->view_distance;
+	//float ahead_y = pt->y + temp_spd_y * this->view_distance;
 	
-	Point2D* ahead = new Point2D(ahead_x, ahead_y);
-	Point2D* ahead2 = new Point2D(ahead_x/2.0f, ahead_y/2.0f);
-	
-	Point2D* mostThreatening = 0;
-	
-	for(int i = 0; i < obstacles.size(); i++){
-		Point2D* center = obstacles[i]->center;
-		float dist = ahead->distance(center);
-		float dist2 = ahead2->distance(center);
-		float dist3 = pt->distance(center);
-		
-		float radius = obstacles[i]->radius + 50.0f;
-		
-		if (dist <= radius || dist2 <= radius || dist3 <= radius ){ //colission
-			
-			if (mostThreatening == 0 || pt->distance(center) < pt->distance(mostThreatening)){
-				mostThreatening = center;
-			}
-		}
-	}*/
+	//Point2D* ahead = new Point2D(ahead_x, ahead_y);
+	//Point2D* ahead2 = new Point2D(ahead_x/2.0f, ahead_y/2.0f);
 	
 	int count = 0;
 	Point2D* mostThreatening = 0;
@@ -191,9 +232,9 @@ void Boid::avoid_obstacle(){
 	
 	for(int i = 0; i < obstacles.size(); i++){
 		float dist = obstacles[i]->center->distance(this->pt);
-		float radius = obstacles[i]->radius * 2.0;
-		if (dist < radius){
-			
+		float radius = obstacles[i]->radius * 2.5;
+		//if (dist < radius){
+		if (dist < view_distance){
 			avoiding = true;
 			
 			if (mostThreatening == 0 || pt->distance(obstacles[i]->center) < pt->distance(mostThreatening)){
@@ -201,23 +242,23 @@ void Boid::avoid_obstacle(){
 			}
 			
 			obstacle_x = obstacle_x - (obstacles[i]->center->x - pt->x);
+			//obstacle_x = obstacle_x - (obstacles[i]->center->x - ahead_x);
 			obstacle_y = obstacle_y - (obstacles[i]->center->y - pt->y);
+			//obstacle_y = obstacle_y - (obstacles[i]->center->y - ahead_y);
 			count++;
 		}
 	}
-	
 	/*
 	if (mostThreatening != 0){
-		obstacle_x = (pt->x - mostThreatening->x);
-		obstacle_y = (pt->y - mostThreatening->y);
+		obstacle_x = (ahead_x - mostThreatening->x);
+		obstacle_y = (ahead_y - mostThreatening->y);
 	}
 	*/
 	
-	/*
 	if (count > 0){
 		obstacle_x = obstacle_x / count;
 		obstacle_y = obstacle_y / count;
-	}*/
+	}
 	
 }
 	
@@ -305,7 +346,9 @@ float Boid::get_dist(){
 }
 
 void Boid::find_grid_pos(int size){
+	this->grid_size = size;
 	grid_x = 0; grid_y = 0;
+	bool x = false, y = false;
 	for(int i = 0; i < (size-1); i++){
 		int start = i * view_distance, end = (i+1) * view_distance;
 		int start_x, end_x, start_y, end_y;
@@ -313,6 +356,7 @@ void Boid::find_grid_pos(int size){
 		end_x = end - GRID_SIZE;
 		if (start_x <= pt->x && pt->x <= end_x){
 			grid_x = i;
+			x = true;
 		}
 		
 		start_y = 400 - start;
@@ -320,8 +364,10 @@ void Boid::find_grid_pos(int size){
 		
 		if (start_x <= pt->y && pt->y <= end_x){
 			grid_y = i;
+			y = true;
 		}
 	}
+	if (!x && !y) cout << "GG\n";
 	
 	//cout << "Position: " << pt->x << ", " << pt->y << endl;
 	//cout << "Grid: [" << grid_x << "][" << grid_y << "]\n";
@@ -338,7 +384,7 @@ void Boid::draw(){
 	
 	float tam = 2.0f;
 	
-	cout << "Texture " << texture << endl;
+	//cout << "Texture " << texture << endl;
 	
 	glPushMatrix();
 	glBindTexture(GL_TEXTURE_2D, texture);
