@@ -13,9 +13,9 @@
 #include "circle.h"
 
 #define KEY_ESC 27
-#define BOIDS 1000
+#define BOIDS 2000
 #define OBJECTIVES 40
-#define OBSTACLES 7
+#define OBSTACLES 10
 #define RADIUS 40.0f
 
 #define SIZE 800
@@ -29,6 +29,7 @@ RandNumbers temp1;
 GLuint fish_texture = 0;
 GLuint predator_texture = 0;
 GLuint obstacle_texture = 0;
+GLuint background_texture = 0;
 
 float distance(Point2D* a, Point2D* b){
 	return sqrt(pow(a->x - b->x, 2) + pow(a->y - b->y, 2));
@@ -189,6 +190,25 @@ void draw_grid(){
 	glEnd();
 }
 
+void draw_background(){
+	glBindTexture(GL_TEXTURE_2D, background_texture);
+	glBegin(GL_QUADS);
+	
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex3f(-400.0f, -400.0f, 0.0f);
+	
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex3f(-400.0f, 400.0f, 0.0f);
+	
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex3f(400.0f, 400.0f, 0.0f);
+	
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex3f(400.0f, -400.0f, 0.0f);
+	
+	glEnd();
+}
+
 //funcion llamada a cada imagen
 void glPaint(void) {
 	
@@ -209,9 +229,13 @@ void glPaint(void) {
 	
 	clear_grid();
 	
+	
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
+	
+	draw_background();
+	
 	for (int i = 0; i < boids.size(); i++){
 		boids[i]->move();
 		boids[i]->find_grid_pos(size);
@@ -340,6 +364,8 @@ int main(int argc, char** argv) {
 	//predator_texture = TextureManager::Inst()->LoadTexture("Textures/fish.png", GL_RGBA, GL_RGBA);
 	
 	obstacle_texture = TextureManager::Inst()->LoadTexture("Textures/coral.png", GL_RGBA, GL_RGBA);
+	
+	background_texture = TextureManager::Inst()->LoadTexture("Textures/background.jpg", GL_RGB, GL_RGB);
 	
 	generate_points(BOIDS);
 	//gen_objectives();
