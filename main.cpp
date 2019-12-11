@@ -13,9 +13,9 @@
 #include "circle.h"
 
 #define KEY_ESC 27
-#define BOIDS 1000
+#define BOIDS 750
 #define OBJECTIVES 40
-#define OBSTACLES 0
+#define OBSTACLES 3
 #define RADIUS 50.0f
 
 #define SIZE 800
@@ -221,7 +221,7 @@ void glPaint(void) {
 	for (int i = 0; i < predators.size(); i++){
 		predators[i]->move();
 		predators[i]->draw();
-		predators[i]->draw_line();
+		//predators[i]->draw_line();
 	}
 	
 	//obstacles

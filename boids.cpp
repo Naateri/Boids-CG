@@ -197,13 +197,14 @@ void Boid::avoid_predator(){
 	
 	for(int i = 0; i < predators.size(); i++){
 		pred = predators[i];
-		if (pred->get_pt()->distance(this->pt) <= this->view_distance){
+		if (this->pt->distance(pred->get_pt()) <= this->view_distance){
+			//cout << "PREDATOR\n";
 			//this->boid_speed = RUNNING_SPEED;
-			this->boid_speed *= 2;
+			//this->boid_speed *= 2;
 			/*this->boid_speed_x *= 2;
 			this->boid_speed_y *= 2;*/
-			predator_x += (this->pt->x - pred->get_pt()->x);
-			predator_y += (this->pt->y - pred->get_pt()->y);
+			predator_x = predator_x - (pred->get_pt()->x - this->pt->x);
+			predator_y = predator_y - (pred->get_pt()->y - this->pt->y);
 		}
 	}
 	
@@ -232,10 +233,11 @@ void Boid::avoid_obstacle(){
 	
 	for(int i = 0; i < obstacles.size(); i++){
 		float dist = obstacles[i]->center->distance(this->pt);
-		float radius = obstacles[i]->radius * 2.5;
+		float radius = obstacles[i]->radius;
 		//if (dist < radius){
-		if (dist < view_distance){
-			avoiding = true;
+		if (dist < this->view_distance){
+			if (dist < radius + 5.0f)
+				avoiding = true;
 			
 			if (mostThreatening == 0 || pt->distance(obstacles[i]->center) < pt->distance(mostThreatening)){
 				mostThreatening = obstacles[i]->center;
@@ -248,17 +250,17 @@ void Boid::avoid_obstacle(){
 			count++;
 		}
 	}
-	/*
-	if (mostThreatening != 0){
-		obstacle_x = (ahead_x - mostThreatening->x);
-		obstacle_y = (ahead_y - mostThreatening->y);
-	}
-	*/
 	
-	if (count > 0){
+	/*if (mostThreatening != 0){
+		obstacle_x = (pt->x - mostThreatening->x);
+		obstacle_y = (pt->y - mostThreatening->y);
+	}*/
+	
+	
+	/*if (count > 0){
 		obstacle_x = obstacle_x / count;
 		obstacle_y = obstacle_y / count;
-	}
+	}*/
 	
 }
 	
@@ -275,40 +277,33 @@ void Boid::move(){
 	
 	//move_towards_objective();
 	
-	//avoid_predator();
+	avoid_predator();
 	
 	avoid_obstacle();
 	
 	move_x = 0.0f; move_y = 0.0f;
+	
 	float normal;
 	
-	/*objective_x += (center_x - this->pt->x);
-	objective_y += (center_y - this->pt->y);*/
 	
-	if (go_to_obj_only){
-		move_x = objective_x;
-		move_y = objective_y;
+	if (avoiding){
+		move_x = obstacle_x; move_y = obstacle_y;
+		acc_x = obstacle_x; acc_y = obstacle_y;
 	} else {
-		move_x = ((center_x/100) + distance_x + (vel_x/8) + predator_x
-				   + 10*obstacle_x);
-		move_y = ((center_y/100) + distance_y + (vel_y/8) + predator_y
-				   + 10*obstacle_y);
+	
+	move_x = ((center_x/100) + distance_x + (vel_x/8) + predator_x
+			   + 10*obstacle_x);
+	move_y = ((center_y/100) + distance_y + (vel_y/8) + predator_y
+			   + 10*obstacle_y);
 	}
-	
-	/*if (objective_x == 0 && objective_y == 0){
-		gen_objective();
-	}*/
-	
-	/*if (move_x == 0 && move_y == 0) {
-		random_move();
-		return;
-	}*/
 	
 	normal = sqrt(pow(move_x, 2) + pow(move_y, 2));
 	if (move_x != 0) move_x /= normal;
 	if (move_y != 0) move_y /= normal;
 	
 	acc_x += move_x; acc_y += move_y;
+	
+	//boid_speed_x = move_x; boid_speed_y = move_y;
 	
 	/*pt->x += (boid_speed * move_x);
 	pt->y += (boid_speed * move_y);*/
@@ -319,7 +314,7 @@ void Boid::move(){
 	boid_speed_x += acc_x;
 	boid_speed_y += acc_y;
 	
-	if (getNorm(boid_speed_x, boid_speed_y) >= abs(max_speed)){
+	if (getNorm(boid_speed_x, boid_speed_y) >= max_speed){
 		float norm = getNorm(boid_speed_x, boid_speed_y);
 		boid_speed_x = boid_speed_x / norm * max_speed;
 		boid_speed_y = boid_speed_y / norm * max_speed;
@@ -367,7 +362,7 @@ void Boid::find_grid_pos(int size){
 			y = true;
 		}
 	}
-	if (!x && !y) cout << "GG\n";
+	//if (!x && !y) cout << "GG\n";
 	
 	//cout << "Position: " << pt->x << ", " << pt->y << endl;
 	//cout << "Grid: [" << grid_x << "][" << grid_y << "]\n";

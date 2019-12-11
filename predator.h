@@ -17,6 +17,10 @@ class Predator{
 private:
 	float speed = 0.8f;
 	
+	float speed_x, speed_y;
+	float acc_x, acc_y;
+	float max_speed = 1.9f;
+	
 	Boid* cur_obj;
 	bool killed_obj = true;
 	
@@ -38,6 +42,7 @@ private:
 	void move_towards_boids(); //move towards closest boid
 	
 public:
+	Predator();
 	void set_pt(Point2D* pt) { this->pt = pt; };
 	Point2D* get_pt() { return this->pt; };
 	void move();

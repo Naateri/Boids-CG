@@ -2,6 +2,15 @@
 
 std::vector<Boid*> all_boids;
 
+float getNorm_(float x, float y){
+	return sqrt(pow(x, 2) + pow(y, 2));
+}
+
+Predator::Predator(){
+	acc_x = 0.0f; acc_y = 0.0f;
+	speed_x = 1.0f; speed_y = -1.0f;
+}
+
 int rdtsc(){
 	__asm__ __volatile__("rdtsc");
 }
@@ -67,10 +76,11 @@ void Predator::move_towards_boids(){
 	for (int i = 0; i < boids.size(); i++){
 		obj = boids[i];
 		cur_dist = obj->get_pt()->distance(this->pt);
-		if (cur_dist <= this->view_distance && cur_dist < min_dist){
+		if (cur_dist < min_dist){
 			cur_obj = obj;
 			objective_x = (obj->get_pt()->x - this->pt->x);
 			objective_y = (obj->get_pt()->y - this->pt->y);
+			min_dist = cur_dist;
 		}
 	}
 	killed_obj = false;
@@ -89,17 +99,26 @@ void Predator::move(){
 	if (move_x != 0) move_x /= normal;
 	if (move_y != 0) move_y /= normal;
 	
-	if (move_x == 0 && move_y == 0) random_move();
-	
 	//cout << "move_x " << move_x << ' ' << move_y << endl;
 	
-	pt->x += (move_x * speed);
-	pt->y += (move_y * speed);
+	acc_x += move_x; acc_y += move_y;
 	
-	if (pt->y >= 400) pt->y--;
-	else if (pt->y <= -400) pt->y++;
-	if (pt->x >= 400) pt->x--;
-	else if (pt->x <= -400) pt->x++;
+	pt->x += speed_x;
+	pt->y += speed_y;
+	
+	speed_x += acc_x;
+	speed_y += acc_y;
+	
+	if (getNorm_(speed_x, speed_y) >= abs(max_speed)){
+		float norm = getNorm_(speed_x, speed_y);
+		speed_x = speed_x / norm * max_speed;
+		speed_y = speed_y / norm * max_speed;
+	}
+	
+	if (pt->y >= 400) pt->y = -400;
+	else if (pt->y <= -400) pt->y = 400;
+	if (pt->x >= 400) pt->x = -400;
+	else if (pt->x <= -400) pt->x = 400;
 	
 	if (all_boids.empty()) return;
 	for (int i = 0; i < all_boids.size(); i++){
@@ -115,7 +134,7 @@ void Predator::move(){
 void Predator::draw(){
 	glPointSize(6);
 	glBegin(GL_POINTS);
-	glColor3d(0, 255, 0);
+	glColor3d(255, 0, 0);
 	glVertex2f(pt->x, pt->y);
 	glEnd();
 }
