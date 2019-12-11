@@ -10,6 +10,7 @@
 #include <GL/glut.h>
 #include "point.h"
 #include "boids.h"
+#include "circle.h"
 
 class Boid;
 
@@ -19,7 +20,9 @@ private:
 	
 	float speed_x, speed_y;
 	float acc_x, acc_y;
-	float max_speed = 1.9f;
+	float max_speed = 2.5f;
+	
+	float obstacle_x, obstacle_y;
 	
 	Boid* cur_obj;
 	bool killed_obj = true;
@@ -31,6 +34,7 @@ private:
 	float move_x, move_y;
 	
 	bool moved = false;
+	bool avoiding;
 	int dir, max_moves = 20, cur_moves;
 	
 	Point2D* pt;
@@ -40,6 +44,7 @@ private:
 	void move_right();
 	void random_move();
 	void move_towards_boids(); //move towards closest boid
+	void avoid_obstacle();
 	
 public:
 	Predator();
@@ -51,5 +56,6 @@ public:
 };
 
 extern std::vector<Boid*> all_boids;
+extern std::vector<Circle*> all_obstacles;
 
 #endif

@@ -192,12 +192,15 @@ void Boid::avoid_predator(){
 	
 	Predator* pred;
 	
+	predator = true;
+	
 	//this->boid_speed_x = REGULAR_SPEED;
 	//this->boid_speed_y = REGULAR_SPEED;
 	
 	for(int i = 0; i < predators.size(); i++){
 		pred = predators[i];
-		if (this->pt->distance(pred->get_pt()) <= this->view_distance){
+		float distance = this->pt->distance(pred->get_pt());
+		if (distance <= this->view_distance){
 			//cout << "PREDATOR\n";
 			//this->boid_speed = RUNNING_SPEED;
 			//this->boid_speed *= 2;
@@ -205,6 +208,9 @@ void Boid::avoid_predator(){
 			this->boid_speed_y *= 2;*/
 			predator_x = predator_x - (pred->get_pt()->x - this->pt->x);
 			predator_y = predator_y - (pred->get_pt()->y - this->pt->y);
+			
+			if (distance <= 15.0f) predator = true;
+			
 		}
 	}
 	
@@ -217,14 +223,6 @@ void Boid::avoid_obstacle(){
 	
 	float normal = getNorm(this->boid_speed_x, this->boid_speed_y);
 	float temp_spd_x = this->boid_speed_x / normal, temp_spd_y = this->boid_speed_y / normal;
-	//float ahead_x = pt->x + temp_spd_x * dynamic_length;
-	//float ahead_y = pt->y + temp_spd_y * dynamic_length;
-	
-	//float ahead_x = pt->x + temp_spd_x * this->view_distance;
-	//float ahead_y = pt->y + temp_spd_y * this->view_distance;
-	
-	//Point2D* ahead = new Point2D(ahead_x, ahead_y);
-	//Point2D* ahead2 = new Point2D(ahead_x/2.0f, ahead_y/2.0f);
 	
 	int count = 0;
 	Point2D* mostThreatening = 0;
@@ -257,10 +255,10 @@ void Boid::avoid_obstacle(){
 	}*/
 	
 	
-	/*if (count > 0){
+	if (count > 0){
 		obstacle_x = obstacle_x / count;
 		obstacle_y = obstacle_y / count;
-	}*/
+	}
 	
 }
 	
@@ -289,11 +287,14 @@ void Boid::move(){
 	if (avoiding){
 		move_x = obstacle_x; move_y = obstacle_y;
 		acc_x = obstacle_x; acc_y = obstacle_y;
+	} else if (predator){
+		move_x = predator_x; move_y = predator_y;
+		acc_x = predator_x; acc_y = predator_y;
 	} else {
 	
-	move_x = ((center_x/100) + distance_x + (vel_x/8) + predator_x
+		move_x = ((center_x/100) + distance_x + (vel_x/8) + predator_x
 			   + 10*obstacle_x);
-	move_y = ((center_y/100) + distance_y + (vel_y/8) + predator_y
+		move_y = ((center_y/100) + distance_y + (vel_y/8) + predator_y
 			   + 10*obstacle_y);
 	}
 	

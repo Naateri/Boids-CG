@@ -13,10 +13,10 @@
 #include "circle.h"
 
 #define KEY_ESC 27
-#define BOIDS 750
+#define BOIDS 1000
 #define OBJECTIVES 40
-#define OBSTACLES 3
-#define RADIUS 50.0f
+#define OBSTACLES 8
+#define RADIUS 40.0f
 
 #define SIZE 800
 #define SIZE_F 400.0f
@@ -187,6 +187,8 @@ void glPaint(void) {
 	
 	//cout << "Objectives: " << objectives.size() << endl;
 	all_boids = boids;
+	
+	all_obstacles = obstacles;
 	
 	//El fondo de la escena al color initial
 	glClear(GL_COLOR_BUFFER_BIT); //CAMBIO

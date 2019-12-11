@@ -34,12 +34,12 @@ struct RandNumbers{
 class Boid{
 private:
 	
-	bool avoiding;
+	bool avoiding, predator;
 	
 	bool mesh = true;
 	
 	int grid_size;
-	
+
 	float view_angle = 135.0f;
 	float view_distance = 100.0f;
 	float boid_speed = 0.5f;
