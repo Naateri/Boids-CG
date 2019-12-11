@@ -109,7 +109,7 @@ void Predator::avoid_obstacle(){
 		float radius = obstacles[i]->radius;
 		//if (dist < radius){
 		if (dist < this->view_distance){
-			if (dist < radius + 5.0f)
+			if (dist < radius + 15.0f)
 				avoiding = true;
 			
 			if (mostThreatening == 0 || pt->distance(obstacles[i]->center) < pt->distance(mostThreatening)){
@@ -191,11 +191,36 @@ void Predator::move(){
 }
 
 void Predator::draw(){
-	glPointSize(6);
+	/*glPointSize(6);
 	glBegin(GL_POINTS);
 	glColor3d(255, 0, 0);
 	glVertex2f(pt->x, pt->y);
+	glEnd();*/
+	
+	float tam = 35.0f;
+	
+	//cout << "Texture " << texture << endl;
+	
+	glPushMatrix();
+	glColor3d(255,255,255);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glBegin(GL_QUADS);
+	
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex3f(pt->x - tam, pt->y - tam, 0.0f);
+	
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex3f(pt->x - tam, pt->y + tam, 0.0f);
+	
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex3f(pt->x + tam, pt->y + tam, 0.0f);
+	
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex3f(pt->x + tam, pt->y - tam, 0.0f);
+	
 	glEnd();
+	glPopMatrix();
+	
 }
 
 void Predator::draw_line(){

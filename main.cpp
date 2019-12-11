@@ -23,8 +23,11 @@
 
 using namespace std;
 
+bool show_grid = false;
+
 RandNumbers temp1;
 GLuint fish_texture = 0;
+GLuint predator_texture = 0;
 
 float distance(Point2D* a, Point2D* b){
 	return sqrt(pow(a->x - b->x, 2) + pow(a->y - b->y, 2));
@@ -203,7 +206,7 @@ void glPaint(void) {
 	clear_grid();
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
-	//glEnable(GL_TEXTURE_2D);
+	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	for (int i = 0; i < boids.size(); i++){
 		boids[i]->move();
@@ -214,24 +217,29 @@ void glPaint(void) {
 		boids[i]->draw();
 		//boids[i]->draw_line();
 		
-		boids[i]->edges();
+		//boids[i]->edges();
 	}
 	//glDisable(GL_BLEND);
-	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	//predator
+	
+	glBindTexture(GL_TEXTURE_2D, predator_texture);
+	
 	for (int i = 0; i < predators.size(); i++){
 		predators[i]->move();
 		predators[i]->draw();
 		//predators[i]->draw_line();
 	}
 	
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisable(GL_TEXTURE_2D);
+	
 	//obstacles
 	for (int i = 0; i < obstacles.size(); i++){
 		obstacles[i]->draw();
 	}
 	
-	draw_grid();
+	if (show_grid) draw_grid();
 	
 	boids = all_boids;
 	
@@ -284,6 +292,7 @@ GLvoid window_key(unsigned char key, int x, int y) {
 		Point2D* pt = new Point2D(-SIZE_F, SIZE_F);
 		p = new Predator;
 		p->set_pt(pt);
+		p->texture = predator_texture;
 		predators.push_back(p);
 		break;
 	}
@@ -317,13 +326,14 @@ int main(int argc, char** argv) {
 	
 	cout << "initgl\n";
 	
-	//fish_texture = TextureManager::Inst()->LoadTexture("nemo.jpg", GL_RGB, GL_RGB);
-	//fish_texture = TextureManager::Inst()->LoadTexture("test_fish3.jpg", GL_RGB, GL_RGB);
-	
 	/*string fish = "real_fish.png";
 	const char* texture1 = fish.c_str();
 	
 	fish_texture = TextureManager::Inst()->LoadTexture(texture1, GL_RGBA, GL_RGBA);*/
+	
+	fish_texture = TextureManager::Inst()->LoadTexture("Textures/fish.png", GL_RGBA, GL_RGBA);
+	predator_texture = TextureManager::Inst()->LoadTexture("Textures/sharpedo.png", GL_RGBA, GL_RGBA);
+	//predator_texture = TextureManager::Inst()->LoadTexture("Textures/fish.png", GL_RGBA, GL_RGBA);
 	
 	generate_points(BOIDS);
 	//gen_objectives();

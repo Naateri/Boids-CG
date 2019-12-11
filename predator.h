@@ -47,6 +47,7 @@ private:
 	void avoid_obstacle();
 	
 public:
+	GLuint texture;
 	Predator();
 	void set_pt(Point2D* pt) { this->pt = pt; };
 	Point2D* get_pt() { return this->pt; };

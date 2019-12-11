@@ -102,13 +102,15 @@ void Boid::avoid_boids(){
 	distance_y = 0;
 	int count = 0;
 	
+	float separation = 25.0f;
+	
 	if (!mesh){
 	
 	for(int i = 0; i < boids.size(); i++){
 		if (boids[i]->get_pt()->x == pt->x 
 			&& boids[i]->get_pt()->y == pt->y) continue;
 		float dist = boids[i]->get_pt()->distance(this->pt);
-		if (dist <= 20.0f){
+		if (dist <= separation){
 			distance_x = distance_x - (boids[i]->get_pt()->x - this->pt->x);
 			distance_y = distance_y - (boids[i]->get_pt()->y - this->pt->y);
 			count++;
@@ -125,7 +127,7 @@ void Boid::avoid_boids(){
 			temp = GRID[i][j];
 			for (int k = 0; k < temp.size(); k++){
 				float dist = temp[k]->get_pt()->distance(this->pt);
-				if (dist <= 20.0f){
+				if (dist <= separation){
 					distance_x = distance_x - (temp[k]->get_pt()->x - this->pt->x);
 					distance_y = distance_y - (temp[k]->get_pt()->y - this->pt->y);
 					count++;
@@ -324,6 +326,11 @@ void Boid::move(){
 	last_move_x = move_x;
 	last_move_y = move_y;
 	
+	if (pt->y >= 400) pt->y = -400;
+	else if (pt->y <= -400) pt->y = 400;
+	if (pt->x >= 400) pt->x = -400;
+	else if (pt->x <= -400) pt->x = 400;
+	
 	/*if (pt->y >= GRID_SIZE) pt->y = pt->y--;
 	else if (pt->y <= -GRID_SIZE) pt->y++;
 	if (pt->x >= GRID_SIZE) pt->x--;
@@ -373,16 +380,16 @@ void Boid::draw(){
 	//glPointSize(6);
 	//glBegin(GL_POINTS);
 	
-	/*if (!avoiding) glColor3d(0, 0, 255);
-	else glColor3d(255,0,0);*/
-	glColor3d(255,255,255);
+	//if (!avoiding) glColor3d(0, 0, 255);
+	//else glColor3d(255,0,0);
 	//glVertex2f(pt->x, pt->y);
 	
-	float tam = 2.0f;
+	float tam = 6.0f;
 	
 	//cout << "Texture " << texture << endl;
 	
 	glPushMatrix();
+	glColor3d(255,255,255);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_QUADS);
 	
