@@ -43,7 +43,7 @@ private:
 	float view_angle = 135.0f;
 	float view_distance = 100.0f;
 	float boid_speed = 0.5f;
-	float max_speed = 2.0f;
+	float max_speed = 2.5f;
 	
 	/*float boid_speed_x = 0.0f;
 	float boid_speed_y = 0.0f;*/

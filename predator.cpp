@@ -181,7 +181,7 @@ void Predator::move(){
 	
 	if (all_boids.empty()) return;
 	for (int i = 0; i < all_boids.size(); i++){
-		if (all_boids[i]->get_pt()->distance(this->pt) <= 5.0f){
+		if (all_boids[i]->get_pt()->distance(this->pt) <= 10.0f){
 			all_boids.erase(all_boids.begin() + i);
 			killed_obj = true;
 			i--;

@@ -15,7 +15,7 @@
 #define KEY_ESC 27
 #define BOIDS 1000
 #define OBJECTIVES 40
-#define OBSTACLES 8
+#define OBSTACLES 7
 #define RADIUS 40.0f
 
 #define SIZE 800
@@ -28,6 +28,7 @@ bool show_grid = false;
 RandNumbers temp1;
 GLuint fish_texture = 0;
 GLuint predator_texture = 0;
+GLuint obstacle_texture = 0;
 
 float distance(Point2D* a, Point2D* b){
 	return sqrt(pow(a->x - b->x, 2) + pow(a->y - b->y, 2));
@@ -82,7 +83,10 @@ void gen_obstacles(float radius){
 		
 		circ = new Circle(pt, radius);
 		
+		circ->texture = obstacle_texture;
+		
 		circ->print();
+		
 		obstacles.push_back(circ);
 	}
 }
@@ -232,7 +236,7 @@ void glPaint(void) {
 	}
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
+	//glDisable(GL_TEXTURE_2D);
 	
 	//obstacles
 	for (int i = 0; i < obstacles.size(); i++){
@@ -334,6 +338,8 @@ int main(int argc, char** argv) {
 	fish_texture = TextureManager::Inst()->LoadTexture("Textures/fish.png", GL_RGBA, GL_RGBA);
 	predator_texture = TextureManager::Inst()->LoadTexture("Textures/sharpedo.png", GL_RGBA, GL_RGBA);
 	//predator_texture = TextureManager::Inst()->LoadTexture("Textures/fish.png", GL_RGBA, GL_RGBA);
+	
+	obstacle_texture = TextureManager::Inst()->LoadTexture("Textures/coral.png", GL_RGBA, GL_RGBA);
 	
 	generate_points(BOIDS);
 	//gen_objectives();
